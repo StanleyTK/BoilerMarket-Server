@@ -38,6 +38,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "server.authentication.FirebaseAuthentication",  # Use Firebase Auth
+        # "rest_framework.authentication.SessionAuthentication",  # Optional for Browsable API
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",  # Require authentication for all views
+    ],
+}
 
 # Application definition
 
@@ -48,6 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'server',
 ]
 
 MIDDLEWARE = [
