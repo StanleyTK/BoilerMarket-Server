@@ -12,6 +12,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import pymysql
+import firebase_admin
+from firebase_admin import credentials, auth
+
+FIREBASE_CRED = "serviceAccountKey.json"
+cred = credentials.Certificate(FIREBASE_CRED)
+
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
 pymysql.install_as_MySQLdb()
 
