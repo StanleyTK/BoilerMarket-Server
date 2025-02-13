@@ -14,6 +14,7 @@ from pathlib import Path
 import pymysql
 import firebase_admin
 from firebase_admin import credentials, auth
+from decouple import config
 
 FIREBASE_CRED = "serviceAccountKey.json"
 cred = credentials.Certificate(FIREBASE_CRED)
@@ -40,7 +41,7 @@ ALLOWED_HOSTS = []
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "server.authentication.FirebaseAuthentication",  # Use Firebase Auth
+        "user.authentication.FirebaseAuthentication",  # Use Firebase Auth
         # "rest_framework.authentication.SessionAuthentication",  # Optional for Browsable API
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -59,7 +60,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'server',
-    'corsheaders'
+    'corsheaders',
+    'user' # ADD FOLDERS HERE
 ]
 
 MIDDLEWARE = [
@@ -101,19 +103,22 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'boilermarket',
-        'USER': 'admin',
-        'PASSWORD': 'BoilerMarket!!!',
-        'HOST': 'boilermarket.cngai66ksylb.us-east-2.rds.amazonaws.com',  # AWS RDS endpoint
-        'PORT': '3306',  # Default MySQL port
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
+
 
 
 # Password validation
