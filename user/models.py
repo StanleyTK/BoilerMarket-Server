@@ -9,3 +9,6 @@ class User(models.Model):
     bio = models.TextField(null=True, blank=True)
     admin = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "server_user"
