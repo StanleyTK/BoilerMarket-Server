@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from server.authentication import FirebaseAuthentication
-from server.models import User
-from server.serializers import CreateUserSerializer
+from user.authentication import FirebaseAuthentication
+from user.models import User
+from user.serializers import CreateUserSerializer
 
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
