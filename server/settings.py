@@ -41,7 +41,7 @@ ALLOWED_HOSTS = []
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "user.authentication.FirebaseAuthentication",  # Use Firebase Auth
+        "server.authentication.FirebaseAuthentication",  # Use Firebase Auth
         # "rest_framework.authentication.SessionAuthentication",  # Optional for Browsable API
     ],
     "DEFAULT_PERMISSION_CLASSES": [
