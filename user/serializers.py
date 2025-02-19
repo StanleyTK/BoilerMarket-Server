@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from user.models import User
 
+class DeleteUserSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+
 class CreateUserSerializer(serializers.Serializer):
     uid = serializers.CharField()
     email = serializers.EmailField()
