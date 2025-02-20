@@ -10,10 +10,8 @@ from listing.models import Listing
 from listing.serializers import ListingSerializer
 
 
-
-
 @api_view(["GET"])
-@authentication_classes([FirebaseAuthentication])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_listings():
     """
@@ -25,7 +23,7 @@ def get_all_listings():
 
 
 @api_view(["GET"])
-@authentication_classes([FirebaseAuthentication])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_listings_by_keyword(request, keyword):
     """
@@ -34,3 +32,18 @@ def get_listings_by_keyword(request, keyword):
     listings = Listing.objects.filter(title__icontains=keyword)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def create_listing(request):
+    """
+    Create a listing
+    """
+    serializer = ListingSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer.save(seller=request.user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
