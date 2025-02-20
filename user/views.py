@@ -4,10 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
-from server.authentication import FirebaseAuthentication
+from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
-from user.serializers import CreateUserSerializer, UserSerializer
+from user.serializers import CreateUserSerializer, DeleteUserSerializer, UserSerializer
 
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
@@ -27,6 +27,23 @@ def create_user(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
+
+@api_view(["DELETE"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_user(request):
+    serializer = DeleteUserSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    uid = serializer.validated_data["uid"]
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    user.delete()
+    return Response({"message": "User deleted"}, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
 @permission_classes([AllowAny]) 
