@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'server',
     'corsheaders',
-    'user' # ADD FOLDERS HERE
+    'user',
+    'listing'
 ]
 
 MIDDLEWARE = [
