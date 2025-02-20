@@ -1,0 +1,6 @@
+django
+pymysql
+firebase-admin
+python-decouple
+djangorestframework
+django-cors-headers
