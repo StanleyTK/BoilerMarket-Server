@@ -8,7 +8,7 @@ class CreateListingSerializer(serializers.Serializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     category = serializers.CharField()
     userId = serializers.CharField()
-    hidden = serializer.BooleanField()
+    hidden = serializers.BooleanField()
     
     
 
