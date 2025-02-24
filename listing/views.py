@@ -45,5 +45,16 @@ def create_listing(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    serializer.save(seller=request.user)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    validated_data = serializer.validated_data
+    
+    listing = Listing.objects.create(
+        title=validated_data['title'],
+        description=validated_data['description'],
+        price=validated_data['price'],
+        orginal_price=validated_data['price'],
+        category=validated_data['category'],
+        userId=validated_data['userId'],
+        hidden=validated_data['hidden'] # Support for creating a listing as hidden, can be removed if not used
+    )
+
+    return Response({"message": "Listing created"}, status=status.HTTP_201_CREATED)
