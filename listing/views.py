@@ -7,13 +7,14 @@ from rest_framework import status
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import ListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer
+from user.models import User
 
 
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
-def get_all_listings():
+def get_all_listings(request):
     """
     Fetch all listings
     """
@@ -41,19 +42,21 @@ def create_listing(request):
     """
     Create a listing
     """
-    serializer = ListingSerializer(data=request.data)
+    serializer = CreateListingSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     validated_data = serializer.validated_data
     
+    user = User.objects.get(uid=validated_data['user'])
+
     listing = Listing.objects.create(
         title=validated_data['title'],
         description=validated_data['description'],
         price=validated_data['price'],
-        orginal_price=validated_data['price'],
+        original_price=validated_data['price'],
         category=validated_data['category'],
-        userId=validated_data['userId'],
+        user=user,
         hidden=validated_data['hidden'] # Support for creating a listing as hidden, can be removed if not used
     )
 

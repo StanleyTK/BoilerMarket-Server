@@ -7,7 +7,7 @@ class CreateListingSerializer(serializers.Serializer):
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     category = serializers.CharField()
-    userId = serializers.CharField()
+    user = serializers.CharField()
     hidden = serializers.BooleanField()
     
     
@@ -17,7 +17,17 @@ class ListingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
         fields = [
-            "id", "title", "description", "price", "category",
-            "condition", "location", "seller"
+            "id",
+            "title",
+            "description",
+            "price",
+            "original_price",
+            "category",
+            "user",
+            "hidden",
+            "views",
+            "saves",
+            "dateListed",
+            "sold"
         ]
-        read_only_fields = ["id", "seller"]
+        read_only_fields = ["id", "orignal_price",  "userId", "dateListed"]
