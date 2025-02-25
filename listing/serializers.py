@@ -12,6 +12,18 @@ class CreateListingSerializer(serializers.Serializer):
     
     
 
+class TopListingSerializer(serializers.ModelSerializer):
+    displayName = serializers.ReadOnlyField(source='user.displayName')
+    uid = serializers.ReadOnlyField(source='user.uid')
+
+    class Meta:
+        model = Listing
+        fields = [
+            'id', 'title', 'description', 'price', 'displayName',
+            'original_price', 'category', 'hidden', 'views',
+            'saves', 'dateListed', 'sold', 'uid'
+        ]
+
 
 class ListingSerializer(serializers.ModelSerializer):
     class Meta:

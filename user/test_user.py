@@ -121,7 +121,7 @@ class UserEndpointTests(APITestCase):
     # ---------------------------
     # Update User Info Tests (User Story #8)
     # ---------------------------
-    # User Story #8: "As a user, I would like to edit account profile"
+    # User Story #7: "As a user, I would like to edit account profile"
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_us8_update_user_info_success(self, mock_verify):
         """US#8: Successful update of user profile fields."""
@@ -138,7 +138,7 @@ class UserEndpointTests(APITestCase):
         self.assertEqual(updated_user.purdueEmail, "updated@example.com")
         self.assertEqual(updated_user.bio, "Updated bio")
 
-    # User Story #8: Update failure due to invalid data type for displayName
+    # User Story #7: Update failure due to invalid data type for displayName
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_us8_update_user_info_invalid(self, mock_verify):
         """US#8: Providing an invalid data type for displayName should return 400."""

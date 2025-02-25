@@ -29,6 +29,7 @@ def create_user(request):
     
     return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
 
+
 @api_view(["DELETE"])
 @authentication_classes([FirebaseAuthentication])
 @permission_classes([IsAuthenticated])

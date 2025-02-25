@@ -7,7 +7,7 @@ from rest_framework import status
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import CreateListingSerializer, ListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer
 from user.models import User
 
 
@@ -33,6 +33,14 @@ def get_listings_by_keyword(request, keyword):
     listings = Listing.objects.filter(title__icontains=keyword)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_top_listings(request):
+    listings = Listing.objects.order_by("-dateListed")[:12]
+    serializer = TopListingSerializer(listings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 @api_view(["POST"])
