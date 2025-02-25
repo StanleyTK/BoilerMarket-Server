@@ -50,12 +50,13 @@ def send_purdue_verification(request):
     
     uid = serializer.validated_data["uid"]
     purdueEmail = serializer.validated_data["purdueEmail"]
-    if User.objects.filter(purdueEmail=purdueEmail).exists():
-        return Response({"error": "This email has already been used"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         user = User.objects.get(uid=uid)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if User.objects.filter(purdueEmail=purdueEmail).exists() and User.objects.get(purdueEmail=purdueEmail).uid != uid:
+        return Response({"error": "This email has already been used"}, status=status.HTTP_400_BAD_REQUEST)
     
     if user.purdueVerificationLastSent is not None and (django.utils.timezone.now() - user.purdueVerificationLastSent).seconds < 60:
         return Response({"error": "Verification email already sent within the last minute"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
