@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from user.models import User
 
+class VerifyPurdueEmailSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+
+class AddPurdueVerificationTokenSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    purdueEmail = serializers.EmailField()
+
 class DeleteUserSerializer(serializers.Serializer):
     uid = serializers.CharField()
 
@@ -14,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "uid", "email", "purdueEmail", "displayName",
+            "uid", "email", "purdueEmail", "purdueEmailVerified", "displayName",
             "rating", "bio", "admin", "banned"
         ]
         # Mark certain fields as read-only so they can’t be updated by the user.
