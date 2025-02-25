@@ -50,6 +50,8 @@ def send_purdue_verification(request):
     
     uid = serializer.validated_data["uid"]
     purdueEmail = serializer.validated_data["purdueEmail"]
+    if User.objects.filter(purdueEmail=purdueEmail).exists():
+        return Response({"error": "This email has already been used"}, status=status.HTTP_400_BAD_REQUEST)
     try:
         user = User.objects.get(uid=uid)
     except User.DoesNotExist:

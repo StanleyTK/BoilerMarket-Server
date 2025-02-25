@@ -3,6 +3,7 @@ from firebase_admin import auth
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import User
+from user.models import User as BoilerMarketUser
 
 class FirebaseEmailVerifiedAuthentication(BaseAuthentication):
     def authenticate(self, request):
@@ -20,10 +21,14 @@ class FirebaseEmailVerifiedAuthentication(BaseAuthentication):
         
         uid = decoded_token.get("uid")
         email_verified = decoded_token.get("email_verified")
-        print(decoded_token)
 
         if not email_verified:
             raise AuthenticationFailed("Email not verified")
+        boiler_market_user = BoilerMarketUser.objects.get(uid=uid)
+        if not boiler_market_user:
+            raise AuthenticationFailed("User not found")
+        if not boiler_market_user.purdueEmailVerified:
+            raise AuthenticationFailed("Purdue email not verified")
         
         user, created = User.objects.get_or_create(username=uid)
         return (user, None)
