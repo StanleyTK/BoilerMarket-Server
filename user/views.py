@@ -7,7 +7,86 @@ from rest_framework import status
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
-from user.serializers import CreateUserSerializer, DeleteUserSerializer, UserSerializer
+from user.serializers import AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, UserSerializer, VerifyPurdueEmailSerializer
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from decouple import config
+import uuid
+
+SENDGRID_API_KEY = config('SENDGRID_API_KEY')
+APP_URL = config("APP_URL")
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def verify_purdue_email(request):
+    serializer = VerifyPurdueEmailSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    uid = serializer.validated_data["uid"]
+    token = serializer.validated_data["token"]
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if user.purdueVerificationToken != token:
+        return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user.purdueEmailVerified = True
+    user.save()
+    return Response({"message": "Purdue email verified"}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def send_purdue_verification(request):
+    serializer = AddPurdueVerificationTokenSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    uid = serializer.validated_data["uid"]
+    purdueEmail = serializer.validated_data["purdueEmail"]
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if user.purdueVerificationLastSent is not None and (django.utils.timezone.now() - user.purdueVerificationLastSent).seconds < 60:
+        return Response({"error": "Verification email already sent within the last minute"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    
+    token = str(uuid.uuid4())
+
+    user.purdueVerificationToken = token
+    user.purdueEmail = purdueEmail
+    user.purdueEmailVerified = False
+    user.save()
+
+    message = Mail(
+        from_email="boilermarket21@gmail.com",
+        to_emails=user.purdueEmail,
+    )
+
+    message.template_id = "d-fa79c8ecdc4a401f92d8136d357ed4d7"
+    message.dynamic_template_data = {
+        "firstName": user.displayName,
+        "link": f"{APP_URL}verify/{token}"
+    }
+
+    try:
+        print("attempting to send email")
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg.send(message)
+        user.purdueVerificationLastSent = django.utils.timezone.now()
+        user.save()
+    except Exception as e:
+        print("error")
+        print(e.with_traceback())
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({"message": "Purdue verification token added and sent"}, status=status.HTTP_200_OK)
+
 
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])

@@ -5,6 +5,8 @@ class User(models.Model):
     email = models.EmailField()
     purdueEmail = models.EmailField(null=True, blank=True)
     purdueEmailVerified = models.BooleanField(default=False)
+    purdueVerificationToken = models.CharField(max_length=255, null=True, blank=True)
+    purdueVerificationLastSent = models.DateTimeField(null=True, blank=True)
     displayName = models.CharField(max_length=255)
     rating = models.FloatField(default=0)
     bio = models.TextField(null=True, blank=True)
