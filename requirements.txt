@@ -4,3 +4,4 @@ firebase-admin
 python-decouple
 djangorestframework
 django-cors-headers
+sendgrid
