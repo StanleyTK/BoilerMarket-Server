@@ -11,7 +11,7 @@ class CreateListingSerializer(serializers.Serializer):
     hidden = serializers.BooleanField()
 
 class DeleteListingSerializer(serializers.Serializer):
-    id = serializer.()
+    id = serializers.IntegerField()
     user = serializers.CharField()
     
 

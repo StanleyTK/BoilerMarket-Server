@@ -7,7 +7,7 @@ from rest_framework import status
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer, DeleteListingSerializer
 from user.models import User
 
 
