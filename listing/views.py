@@ -85,24 +85,33 @@ def create_listing(request):
 @api_view(["DELETE"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_listing(request):
+def delete_listing(request, listing_id):
     """
     Delete a listing
     """
-    serializer = DeleteListingSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split("Bearer ")[1]
     
-    validated_data = serializer.validated_data
+    try:
+        decoded_token = firebase_admin_auth.verify_id_token(token)
+        token_uid = decoded_token.get("uid")
+    except Exception as e:
+        return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
     
-    user = User.objects.get(uid=validated_data['user'])
-
-    listing = Listing.objects.get(
-        id=validated_data['id']
-    )
-
+    try:
+        user = User.objects.get(uid=token_uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+    
     if listing.user != user:
-        return Response({"message": "User does not own this listing"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "User does not own this listing"}, status=status.HTTP_401_UNAUTHORIZED)
 
     listing.delete()
 

@@ -7,6 +7,6 @@ urlpatterns = [
     path('getUserListing/<str:uid>/', get_listings_by_user, name="get_listings_by_user"),
     path('create/', create_listing, name="create_listing"),
     path('homepage/', get_top_listings, name='get_top_listings'),
-    path('delete/', delete_listing, name='delete_listing'),
+    path('delete/<str:listing_id>/', delete_listing, name='delete_listing'),
     path('update/<str:listing_id>/', update_listing, name='update_listing')
 ]
