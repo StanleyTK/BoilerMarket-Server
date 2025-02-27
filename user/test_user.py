@@ -8,7 +8,24 @@ from unittest.mock import patch
 # Dummy token verifier for testing purposes.
 def dummy_verify_id_token(token):
     # For testing, always return a dummy uid.
-    return {"uid": "dummy_uid"}
+    return {
+        "uid": "dummy_uid",
+        "email_verified": True
+    }
+
+def dummy_verify_id_token_unverified(token):
+    # For testing, always return a dummy uid.
+    return {
+        "uid": "unverified_uid",
+        "email_verified": True
+    }
+
+def dummy_verify_id_token_verified_purdue_unverified_email(token):
+    # For testing, always return a dummy uid.
+    return {
+        "uid": "dummy_uid",
+        "email_verified": False
+    }
 
 class UserEndpointTests(APITestCase):
     def setUp(self):
@@ -18,7 +35,17 @@ class UserEndpointTests(APITestCase):
             uid="dummy_uid",
             email="dummy@example.com",
             displayName="Dummy",
-            bio="Dummy bio"
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+        self.unverified_user = User.objects.create(
+            uid="unverified_uid",
+            email="unverified@example.com",
+            displayName="Unverified",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=False
         )
         # We'll use a dummy token value.
         self.dummy_token = "dummy_token"
@@ -71,6 +98,30 @@ class UserEndpointTests(APITestCase):
         response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.json())
+
+    # ---------------------------
+    # Email Verification Tests (User Story #2 and #3)
+    # ---------------------------
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token_verified_purdue_unverified_email)
+    def test_us2_verify_email_failure(self, mock_verify):
+        """US#2: Failure to verify email even though purdue email is verified"""
+        url = reverse("check_email_auth")
+        response = self.client.get(url, content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_us3_verify_purdue_email_successful(self, mock_verify):
+        """US#2: Successful verification of Purdue email."""
+        url = reverse("check_email_auth")
+        response = self.client.get(url, content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token_unverified)
+    def test_us3_verify_purdue_email_failure(self, mock_verify):
+        """US#2: Attempt to verify Purdue email without authentication should fail."""
+        url = reverse("check_email_auth")
+        response = self.client.get(url, content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     # ---------------------------
     # Delete User Tests (User Story #5)
