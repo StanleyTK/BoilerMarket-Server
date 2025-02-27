@@ -18,7 +18,7 @@ class UpdateListingSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     class Meta:
         model = Listing
-        fields = ["title", "description", "price"]
+        fields = ["title", "description", "price", "hidden"]
     
 
 class SpecificListingSerializer(serializers.ModelSerializer):
