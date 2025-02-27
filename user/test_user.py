@@ -73,11 +73,11 @@ class UserEndpointTests(APITestCase):
         self.assertIn("email", response.json())
 
     # ---------------------------
-    # Delete User Tests (User Story #4)
+    # Delete User Tests (User Story #5)
     # ---------------------------
-    # User Story #4: "As a user, I would like to delete my account"
+    # User Story #5: "As a user, I would like to delete my account"
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
-    def test_us4_delete_user_success(self, mock_verify):
+    def test_us5_delete_user_success(self, mock_verify):
         """US#4: Successful deletion of an existing user account."""
         url = reverse("delete_user")
         payload = {"uid": self.user.uid}
@@ -86,9 +86,9 @@ class UserEndpointTests(APITestCase):
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(uid=self.user.uid)
 
-    # User Story #4: Deletion failure (user not found)
+    # User Story 5: Deletion failure (user not found)
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
-    def test_us4_delete_user_not_found(self, mock_verify):
+    def test_us5_delete_user_not_found(self, mock_verify):
         """US#4: Deleting a non-existent user should return a 404 error."""
         url = reverse("delete_user")
         payload = {"uid": "nonexistent_uid"}
@@ -98,10 +98,10 @@ class UserEndpointTests(APITestCase):
     # ---------------------------
     # Get User Info Tests (User Stories #5 & #6)
     # ---------------------------
-    # User Story #5: "As a user, I would like to view my own profile"
-    # User Story #6: "As a user, I would like to view another user’s profile"
+    # User Story #6: "As a user, I would like to view my own profile"
+    # User Story #7: "As a user, I would like to view another user’s profile"
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
-    def test_us5_view_user_info_success(self, mock_verify):
+    def test_us6_view_user_info_success(self, mock_verify):
         """US#5/6: Retrieve user information successfully by UID."""
         url = reverse("get_user_by_uid", kwargs={"uid": self.user.uid})
         response = self.client.get(url)
@@ -121,7 +121,7 @@ class UserEndpointTests(APITestCase):
     # ---------------------------
     # Update User Info Tests (User Story #8)
     # ---------------------------
-    # User Story #7: "As a user, I would like to edit account profile"
+    # User Story #8: "As a user, I would like to edit account profile"
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_us8_update_user_info_success(self, mock_verify):
         """US#8: Successful update of user profile fields."""
@@ -138,7 +138,7 @@ class UserEndpointTests(APITestCase):
         self.assertEqual(updated_user.purdueEmail, "updated@example.com")
         self.assertEqual(updated_user.bio, "Updated bio")
 
-    # User Story #7: Update failure due to invalid data type for displayName
+    # User Story #8: Update failure due to invalid data type for displayName
     @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_us8_update_user_info_invalid(self, mock_verify):
         """US#8: Providing an invalid data type for displayName should return 400."""

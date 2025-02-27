@@ -177,3 +177,10 @@ def update_user_info(request):
     serializer.save()
     full_serializer = UserSerializer(user)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def check_email_auth(request):
+    return Response({"message": "User is Verified"}, status=status.HTTP_200_OK)
+

@@ -45,3 +45,4 @@ class EditUserSerializer(serializers.ModelSerializer):
         if not isinstance(raw_value, str):
             raise serializers.ValidationError("displayName must be a string")
         return value
+    

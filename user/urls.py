@@ -1,5 +1,5 @@
 from django.urls import path
-from user.views import create_user, delete_user, get_user_info, send_purdue_verification, update_user_info, verify_purdue_email
+from user.views import check_email_auth, create_user, delete_user, get_user_info, send_purdue_verification, update_user_info, verify_purdue_email
 
 urlpatterns = [
     path('create_user/', create_user, name="create_user"),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('delete_user/', delete_user, name="delete_user"),
     path('send_purdue_verification/', send_purdue_verification, name="send_purdue_verification"),
     path('verify_purdue_email/', verify_purdue_email, name="verify_purdue_email"),
+    path('check_email_auth', check_email_auth, name="check_email_auth"),
 ]
