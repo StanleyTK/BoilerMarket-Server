@@ -9,6 +9,11 @@ class AddPurdueVerificationTokenSerializer(serializers.Serializer):
     uid = serializers.CharField()
     purdueEmail = serializers.EmailField()
 
+    def validate_purdueEmail(self, value):
+        if not value.endswith("@purdue.edu"):
+            raise serializers.ValidationError("Email must end with '@purdue.edu'")
+        return value
+
 class DeleteUserSerializer(serializers.Serializer):
     uid = serializers.CharField()
 

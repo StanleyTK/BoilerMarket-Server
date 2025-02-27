@@ -9,7 +9,10 @@ class CreateListingSerializer(serializers.Serializer):
     category = serializers.CharField()
     user = serializers.CharField()
     hidden = serializers.BooleanField()
-    
+
+class DeleteListingSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    user = serializers.CharField()
     
 
 class TopListingSerializer(serializers.ModelSerializer):
