@@ -7,9 +7,8 @@ from rest_framework import status
 from firebase_admin import auth as firebase_admin_auth
 
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
-from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer, DeleteListingSerializer, UpdateListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, SpecificListingSerializer, SpecificListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
 
@@ -40,7 +39,7 @@ def get_listings_by_keyword(request, keyword):
 @permission_classes([AllowAny])
 def get_top_listings(request):
     listings = Listing.objects.order_by("-dateListed")[:12]
-    serializer = TopListingSerializer(listings, many=True)
+    serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
@@ -51,7 +50,7 @@ def get_listings_by_user(request, uid):
     Fetch all listings that a user owns
     """
     listings = Listing.objects.filter(user=uid)
-    serializer = ListingSerializer(listings, many=True)
+    serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

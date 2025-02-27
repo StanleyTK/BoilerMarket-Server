@@ -20,7 +20,7 @@ class UpdateListingSerializer(serializers.ModelSerializer):
         fields = ["title", "description", "price"]
     
 
-class TopListingSerializer(serializers.ModelSerializer):
+class SpecificListingSerializer(serializers.ModelSerializer):
     displayName = serializers.ReadOnlyField(source='user.displayName')
     uid = serializers.ReadOnlyField(source='user.uid')
 

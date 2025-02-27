@@ -3,5 +3,7 @@
 serviceAccountKey.json
 
 .env
+
 venv
+
 .vscode
