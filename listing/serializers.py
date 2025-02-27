@@ -15,6 +15,7 @@ class DeleteListingSerializer(serializers.Serializer):
     user = serializers.CharField()
     
 class UpdateListingSerializer(serializers.ModelSerializer):
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
     class Meta:
         model = Listing
         fields = ["title", "description", "price"]
