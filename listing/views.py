@@ -41,6 +41,17 @@ def get_top_listings(request):
     serializer = TopListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def get_listings_by_user(request, uid):
+    """
+    Fetch all listings that a user owns
+    """
+    listings = Listing.objects.filter(user=uid)
+    serializer = ListingSerializer(listings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 @api_view(["POST"])
