@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from listing.models import Listing
-
+from user.models import User
 
 class CreateListingSerializer(serializers.Serializer):
     title = serializers.CharField()
@@ -13,6 +13,11 @@ class CreateListingSerializer(serializers.Serializer):
 class DeleteListingSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     user = serializers.CharField()
+    
+class UpdateListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Listing
+        fields = ["title", "description", "price"]
     
 
 class TopListingSerializer(serializers.ModelSerializer):

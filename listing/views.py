@@ -4,10 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
+from firebase_admin import auth as firebase_admin_auth
+
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer, DeleteListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
 
@@ -106,3 +108,39 @@ def delete_listing(request):
     listing.delete()
 
     return Response({"message": "Listing deleted"}, status=status.HTTP_200_OK)
+
+@api_view(["PUT", "PATCH"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def update_listing(request, listing_id):
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split("Bearer ")[1]
+    
+    try:
+        decoded_token = firebase_admin_auth.verify_id_token(token)
+        token_uid = decoded_token.get("uid")
+    except Exception as e:
+        return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        user = User.objects.get(uid=token_uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    if listing.user != user:
+        return Response({"error": "User does not own this listing"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    serializer = UpdateListingSerializer(listing, data=request.data, partial=True)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer.save()
+    full_serializer = ListingSerializer(listing)
+    return Response(full_serializer.data, status=status.HTTP_200_OK)
