@@ -7,7 +7,7 @@ from rest_framework import status
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from listing.models import Listing
-from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, TopListingSerializer, DeleteListingSerializer
 from user.models import User
 
 
@@ -69,3 +69,29 @@ def create_listing(request):
     )
 
     return Response({"message": "Listing created"}, status=status.HTTP_201_CREATED)
+
+@api_view(["DELETE"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_listing(request):
+    """
+    Delete a listing
+    """
+    serializer = DeleteListingSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    validated_data = serializer.validated_data
+    
+    user = User.objects.get(uid=validated_data['user'])
+
+    listing = Listing.objects.get(
+        id=validated_data['id']
+    )
+
+    if listing.user != user:
+        return Response({"message": "User does not own this listing"}, status=status.HTTP_403_FORBIDDEN)
+
+    listing.delete()
+
+    return Response({"message": "Listing deleted"}, status=status.HTTP_200_OK)
