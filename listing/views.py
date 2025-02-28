@@ -19,7 +19,7 @@ def get_all_listings(request):
     """
     Fetch all listings
     """
-    listings = Listing.objects.all()
+    listings = Listing.objects.filter(hidden=False)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -31,7 +31,7 @@ def get_listings_by_keyword(request, keyword):
     """
     Fetch all listings that have a keyword in the title
     """
-    listings = Listing.objects.filter(title__icontains=keyword)
+    listings = Listing.objects.filter(title__icontains=keyword, hidden=False)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
