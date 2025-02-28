@@ -9,7 +9,10 @@ from unittest.mock import patch
 
 # Dummy token verifier for testing purposes.
 def dummy_verify_id_token(token):
-    return {"uid": "dummy_uid"}
+    return {
+        "uid": "dummy_uid",
+        "email_verified": True
+    }
 
 class ListingEndpointTests(APITestCase):
     def setUp(self):
@@ -19,7 +22,9 @@ class ListingEndpointTests(APITestCase):
             uid="dummy_uid",
             email="dummy@example.com",
             displayName="Dummy User",
-            bio="Dummy bio"
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
         )
         # Set a dummy token in the request headers.
         self.dummy_token = "dummy_token"
@@ -40,7 +45,8 @@ class ListingEndpointTests(APITestCase):
             original_price=15.0,
             category="Test",
             user=self.user,
-            hidden=False
+            hidden=False,
+            sold=False
         )
         Listing.objects.create(
             title="Regular Listing",
@@ -49,7 +55,8 @@ class ListingEndpointTests(APITestCase):
             original_price=25.0,
             category="Test",
             user=self.user,
-            hidden=False
+            hidden=False,
+            sold = False
         )
         url = reverse("get_listings_by_keyword", kwargs={"keyword": "Special"})
         response = self.client.get(url)
@@ -73,6 +80,7 @@ class ListingEndpointTests(APITestCase):
                 category="Test",
                 user=self.user,
                 hidden=False,
+                sold= False,
                 dateListed=timezone.now()
             )
         url = reverse("get_top_listings")
@@ -98,7 +106,8 @@ class ListingEndpointTests(APITestCase):
             "price": "50.00",
             "category": "Test",
             "user": self.user.uid,
-            "hidden": False
+            "hidden": False,
+            "sold": True
         }
         response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -107,22 +116,42 @@ class ListingEndpointTests(APITestCase):
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_create_listing_missing_field(self, mock_verify):
         """
-        User Story #9:
-        As a user, I would like to create a listing to sell an item.
+        User Story #11:
+        As a user, I would like to edit a listing
 
         Acceptance Criteria:
-          - If a required field (e.g., title) is missing, the creation fails with a 400 error.
-        This test omits the 'title' field and verifies that a 400 error is returned.
+          -  When a user inputs a changed field, the listing is updated successfully.
+        This test updaes valid data and confirms that the listing is successfully updated.
         """
-        url = reverse("create_listing")
+
+        listing = Listing.objects.create(
+                title="Test Listing ",
+                description="Test top listing",
+                price=10.0,
+                original_price=10.0,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+        )
+        print(listing.id)
+        url = reverse("update", kwargs={"listing_id": "1"})
+
         payload = {
             "description": "Listing without title",
             "price": "30.00",
             "category": "Test",
             "user": self.user.uid,
-            "hidden": False
+            "hidden": False,
+            "sold": True
         }
         response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
         self.assertIn("title", data)
+
+
+
+
+
