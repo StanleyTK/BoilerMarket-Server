@@ -146,6 +146,34 @@ class ListingEndpointTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Listing.objects.filter(title="New Listing").exists())
 
+    
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_delete_listing_success(self, mock_verify):
+        """
+        User Story #10:
+        As a user, I would like to delete a listing.
+        """
+
+        listing = Listing.objects.create(
+            title="Listing to Delete",
+            description="This listing will be deleted",
+            price=100.00,
+            original_price=100.00,
+            category="Test",
+            user=self.user,
+            hidden=False,
+            sold=False
+        )
+
+        url = reverse("delete_listing", kwargs={"listing_id": listing.id})
+        response = self.client.delete(url)
+        
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["message"], "Listing deleted")
+        self.assertFalse(Listing.objects.filter(id=listing.id).exists())
+        
+
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_create_listing_missing_field(self, mock_verify):
         """
