@@ -149,6 +149,33 @@ class ListingEndpointTests(APITestCase):
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_create_listing_missing_field(self, mock_verify):
         """
+        User Story #9:
+        As a user, I would like to create a listing to sell an item.
+
+        Acceptance Criteria:
+          - If a required field (e.g., title) is missing, the creation fails with a 400 error.
+        This test omits the 'title' field and verifies that a 400 error is returned.
+        """
+        url = reverse("create_listing")
+        payload = {
+            "description": "Listing without title",
+            "price": "30.00",
+            "category": "Test",
+            "user": self.user.uid,
+            "hidden": False,
+            "sold": True
+        }
+        response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertIn("title", data)
+
+
+
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_update_listing( self, mock_verify):
+        """
         User Story #11:
         As a user, I would like to edit a listing
 
@@ -168,23 +195,56 @@ class ListingEndpointTests(APITestCase):
                 sold= False,
                 dateListed=timezone.now()
         )
-        print(listing.id)
-        url = reverse("update", kwargs={"listing_id": "1"})
+        url = reverse("update_listing", kwargs={"listing_id": "1"})
 
         payload = {
-            "description": "Listing without title",
+            "description": "desc",
+            "title": "New Title",
             "price": "30.00",
             "category": "Test",
             "user": self.user.uid,
             "hidden": False,
             "sold": True
         }
-        response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(url, data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertIn("title", data)
+        self.assertTrue(Listing.objects.filter(title="New Title").exists())
 
 
+    # @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    # def test_view_own_listings( self, mock_verify):
+    #     """
+    #     User Story #12:
+    #     As a user, I would like to  view my own listings
 
+    #     Acceptance Criteria:
+    #     -  A user should be able to see their own listings
+    #     """
 
+    #     listing = Listing.objects.create(
+    #             title="Test Listing ",
+    #             description="Test top listing",
+    #             price=10.0,
+    #             original_price=10.0,
+    #             category="Test",
+    #             user=self.user,
+    #             hidden=False,
+    #             sold= False,
+    #             dateListed=timezone.now()
+    #     )
+    #     url = reverse("update_listing", kwargs={"listing_id": "1"})
 
+    #     payload = {
+    #         "description": "desc",
+    #         "title": "New Title",
+    #         "price": "30.00",
+    #         "category": "Test",
+    #         "user": self.user.uid,
+    #         "hidden": False,
+    #         "sold": True
+    #     }
+    #     response = self.client.patch(url, data=json.dumps(payload), content_type="application/json")
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     data = response.json()
+    #     self.assertTrue(Listing.objects.filter(title="New Title").exists())
