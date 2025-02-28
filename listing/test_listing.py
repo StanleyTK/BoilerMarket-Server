@@ -25,6 +25,39 @@ class ListingEndpointTests(APITestCase):
         self.dummy_token = "dummy_token"
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.dummy_token}")
 
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_all_listings_authenticated(self, mock_verify):
+        """
+        User Story #18:
+        As a user, I would like to see all listings.
+        """
+        # Create dummy listings.
+        Listing.objects.create(
+            title="Listing 1",
+            description="First listing",
+            price=10.0,
+            original_price=10.0,
+            category="Test",
+            user=self.user,
+            hidden=False
+        )
+        Listing.objects.create(
+            title="Listing 2",
+            description="Second listing",
+            price=20.0,
+            original_price=20.0,
+            category="Test",
+            user=self.user,
+            hidden=False
+        )
+        url = reverse("get_all_listings")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        # Ensure that all listings are returned.
+        self.assertEqual(len(data), 2)
+        self.assertTrue(any(listing["title"] == "Listing 1" for listing in data))
+        self.assertTrue(any(listing["title"] == "Listing 2" for listing in data))
 
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_get_listings_by_keyword_authenticated(self, mock_verify):
