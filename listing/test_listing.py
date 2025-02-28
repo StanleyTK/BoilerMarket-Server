@@ -29,6 +29,31 @@ class ListingEndpointTests(APITestCase):
         # Set a dummy token in the request headers.
         self.dummy_token = "dummy_token"
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.dummy_token}")
+    
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_top_listings_public(self, mock_verify):
+        """
+        User Story #17:
+        As a user, I would like to see top listings when I log in.
+        """
+        # Create more than 12 listings.
+        for i in range(15):
+            Listing.objects.create(
+                title=f"Listing {i}",
+                description="Test top listing",
+                price=10.0 + i,
+                original_price=10.0 + i,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+            )
+        url = reverse("get_top_listings")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertLessEqual(len(data), 12)
 
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_get_all_listings_authenticated(self, mock_verify):
@@ -98,29 +123,7 @@ class ListingEndpointTests(APITestCase):
         # Ensure that each returned listing's title contains "Special".
         self.assertTrue(all("Special" in listing["title"] for listing in data))
 
-    def test_get_top_listings_public(self):
-        """
-        User Story #16:
-        As a user, I would like to see top listings when I log in.
-        """
-        # Create more than 12 listings.
-        for i in range(15):
-            Listing.objects.create(
-                title=f"Listing {i}",
-                description="Test top listing",
-                price=10.0 + i,
-                original_price=10.0 + i,
-                category="Test",
-                user=self.user,
-                hidden=False,
-                sold= False,
-                dateListed=timezone.now()
-            )
-        url = reverse("get_top_listings")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
-        self.assertLessEqual(len(data), 12)
+    
 
     @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
     def test_create_listing_success(self, mock_verify):
@@ -214,7 +217,7 @@ class ListingEndpointTests(APITestCase):
 
         listing = Listing.objects.create(
                 title="Test Listing ",
-                description="Test top listing",
+                description="Test listing",
                 price=10.0,
                 original_price=10.0,
                 category="Test",
@@ -223,7 +226,7 @@ class ListingEndpointTests(APITestCase):
                 sold= False,
                 dateListed=timezone.now()
         )
-        url = reverse("update_listing", kwargs={"listing_id": "1"})
+        url = reverse("update_listing", kwargs={"listing_id": listing.id})
 
         payload = {
             "description": "desc",
@@ -240,39 +243,151 @@ class ListingEndpointTests(APITestCase):
         self.assertTrue(Listing.objects.filter(title="New Title").exists())
 
 
-    # @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
-    # def test_view_own_listings( self, mock_verify):
-    #     """
-    #     User Story #12:
-    #     As a user, I would like to  view my own listings
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_view_own_listings( self, mock_verify):
+        """
+        User Story #12:
+        As a user, I would like to  view my own listings
 
-    #     Acceptance Criteria:
-    #     -  A user should be able to see their own listings
-    #     """
+        Acceptance Criteria:
+        -  A user should be able to see their own listings
+        """
 
-    #     listing = Listing.objects.create(
-    #             title="Test Listing ",
-    #             description="Test top listing",
-    #             price=10.0,
-    #             original_price=10.0,
-    #             category="Test",
-    #             user=self.user,
-    #             hidden=False,
-    #             sold= False,
-    #             dateListed=timezone.now()
-    #     )
-    #     url = reverse("update_listing", kwargs={"listing_id": "1"})
+        listing = Listing.objects.create(
+                title="Test Listing ",
+                description="Test listing",
+                price=10.0,
+                original_price=10.0,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+        )
+        print(self.user)
+        url = reverse("get_listings_by_user", kwargs={"uid": self.user.uid})
+        response = self.client.get(url, content_type="application/json")
+        print(response)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("Test Listing", str(response.json()))
 
-    #     payload = {
-    #         "description": "desc",
-    #         "title": "New Title",
-    #         "price": "30.00",
-    #         "category": "Test",
-    #         "user": self.user.uid,
-    #         "hidden": False,
-    #         "sold": True
-    #     }
-    #     response = self.client.patch(url, data=json.dumps(payload), content_type="application/json")
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     data = response.json()
-    #     self.assertTrue(Listing.objects.filter(title="New Title").exists())
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_view_other_listings( self, mock_verify):
+        """
+        User Story #13:
+        As a user, I would like to  view other user's listings
+
+        Acceptance Criteria:
+        -  A user should be able to view other user's listings
+        """
+        self.user = User.objects.create(
+            uid="default_uid",
+            email="dummy@example.com",
+            displayName="Dummy",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+        self.other_user = User.objects.create(
+            uid="other_uid",
+            email="other@example.com",
+            displayName="other",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+        listing = Listing.objects.create(
+                title="Test other Listing ",
+                description="Test other listing",
+                price=10.0,
+                original_price=10.0,
+                category="Test",
+                user=self.other_user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+        )
+        print(self.user)
+        url = reverse("get_listings_by_user", kwargs={"uid": self.other_user.uid})
+        response = self.client.get(url, content_type="application/json")
+        print(response)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("Test other Listing", str(response.json()))
+
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_mark_as_sold( self, mock_verify):
+        """
+        User Story #14:
+        As a user, I would like to mark my listings as sold
+
+        Acceptance Criteria:
+        -  A user should be able to mark their listings as sold
+        """
+        listing = Listing.objects.create(
+                title="Test other Listing",
+                description="desc",
+                price=10.0,
+                original_price=10.0,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+        )
+        payload = {
+            "description": "desc",
+            "title": "Test other Listing",
+            "price": "10.0",
+            "category": "Test",
+            "user": self.user.uid,
+            "hidden": False,
+            "sold": True
+        }
+        print(self.user)
+        url = reverse("update_listing", kwargs={"listing_id": listing.id})
+        response = self.client.patch(url,data=json.dumps(payload), content_type="application/json")
+        print(response)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertTrue(data["sold"])
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_hide_listing( self, mock_verify):
+        """
+        User Story #15:
+        As a user, I would like to hide my listings
+
+        Acceptance Criteria:
+        -  A user should be able to hide thier listings
+        """
+        listing = Listing.objects.create(
+                title="Test other Listing",
+                description="desc",
+                price=10.0,
+                original_price=10.0,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+        )
+        payload = {
+            "description": "desc",
+            "title": "Test other Listing",
+            "price": "10.0",
+            "category": "Test",
+            "user": self.user.uid,
+            "hidden": True,
+            "sold": False
+        }
+        print(self.user)
+        url = reverse("update_listing", kwargs={"listing_id": listing.id})
+        response = self.client.patch(url,data=json.dumps(payload), content_type="application/json")
+        print(response)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertTrue(data["hidden"])
