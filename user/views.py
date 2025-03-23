@@ -164,27 +164,31 @@ def update_user_info(request):
     try:
         decoded_token = firebase_admin_auth.verify_id_token(token)
         token_uid = decoded_token.get("uid")
-    except Exception as e:
+    except Exception:
         return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     try:
         user = User.objects.get(uid=token_uid)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    remove = request.data.get("removeProfilePicture") == "true"
+    new_profile_picture = request.FILES.get("profilePicture")
+
+    if user.profilePicture and (remove or new_profile_picture):
+        user.profilePicture.delete(save=False)
+
+    if remove:
+        user.profilePicture = None
+
     serializer = EditUserSerializer(user, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    remove = request.data.get("removeProfilePicture") == "true"
-    if remove:
-        user.profilePicture.delete(save=False)
-        user.profilePicture = None
 
-    
     serializer.save()
     full_serializer = UserSerializer(user)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
