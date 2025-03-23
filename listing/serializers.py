@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from listing.models import Listing
+from listing.models import Listing, ListingMedia
 from user.models import User
 
 class CreateListingSerializer(serializers.Serializer):
@@ -9,29 +9,38 @@ class CreateListingSerializer(serializers.Serializer):
     category = serializers.CharField()
     user = serializers.CharField()
     hidden = serializers.BooleanField()
+    media = serializers.ListField(
+        child=serializers.FileField(),
+        required=True
+    )
 
 class DeleteListingSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     user = serializers.CharField()
-    
+
 class UpdateListingSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     class Meta:
         model = Listing
         fields = ["title", "description", "price", "hidden", "sold"]
-    
+
+class ListingMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingMedia
+        fields = ['file']
 
 class SpecificListingSerializer(serializers.ModelSerializer):
     displayName = serializers.ReadOnlyField(source='user.displayName')
     uid = serializers.ReadOnlyField(source='user.uid')
     profilePicture = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'displayName',
             'original_price', 'category', 'hidden', 'views',
-            'saves', 'dateListed', 'sold', 'uid', 'profilePicture'
+            'saves', 'dateListed', 'sold', 'uid', 'profilePicture', 'media'
         ]
 
     def get_profilePicture(self, obj):
@@ -40,22 +49,20 @@ class SpecificListingSerializer(serializers.ModelSerializer):
             return profile_pic.url
         return None
 
+    def get_media(self, obj):
+        return [media.file.url for media in obj.media.all()]
 
 class ListingSerializer(serializers.ModelSerializer):
+    media = serializers.SerializerMethodField()
+
     class Meta:
         model = Listing
         fields = [
-            "id",
-            "title",
-            "description",
-            "price",
-            "original_price",
-            "category",
-            "user",
-            "hidden",
-            "views",
-            "saves",
-            "dateListed",
-            "sold"
+            "id", "title", "description", "price", "original_price",
+            "category", "user", "hidden", "views", "saves",
+            "dateListed", "sold", "media"
         ]
-        read_only_fields = ["id", "orignal_price",  "userId", "dateListed"]
+        read_only_fields = ["id", "original_price", "user", "dateListed"]
+
+    def get_media(self, obj):
+        return [media.file.url for media in obj.media.all()]
