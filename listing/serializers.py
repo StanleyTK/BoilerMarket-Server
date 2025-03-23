@@ -24,14 +24,21 @@ class UpdateListingSerializer(serializers.ModelSerializer):
 class SpecificListingSerializer(serializers.ModelSerializer):
     displayName = serializers.ReadOnlyField(source='user.displayName')
     uid = serializers.ReadOnlyField(source='user.uid')
+    profilePicture = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'displayName',
             'original_price', 'category', 'hidden', 'views',
-            'saves', 'dateListed', 'sold', 'uid'
+            'saves', 'dateListed', 'sold', 'uid', 'profilePicture'
         ]
+
+    def get_profilePicture(self, obj):
+        profile_pic = getattr(obj.user, 'profilePicture', None)
+        if profile_pic and hasattr(profile_pic, 'url'):
+            return profile_pic.url
+        return None
 
 
 class ListingSerializer(serializers.ModelSerializer):

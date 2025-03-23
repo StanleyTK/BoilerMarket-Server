@@ -176,6 +176,12 @@ def update_user_info(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    remove = request.data.get("removeProfilePicture") == "true"
+    if remove:
+        user.profilePicture.delete(save=False)
+        user.profilePicture = None
+
+    
     serializer.save()
     full_serializer = UserSerializer(user)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
@@ -203,30 +209,22 @@ def upload_profile_picture(request):
         decoded_token = firebase_admin_auth.verify_id_token(token)
         token_uid = decoded_token.get("uid")
     except Exception as e:
-        print("[AUTH ERROR]", e)
         return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
         user = User.objects.get(uid=token_uid)
     except User.DoesNotExist:
-        print("[USER ERROR] User not found")
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    print("[FILES RECEIVED]", request.FILES)
-    print("[DATA RECEIVED]", request.data)
 
     serializer = UploadProfilePictureSerializer(user, data=request.data, partial=True)
     if not serializer.is_valid():
-        print("[VALIDATION ERROR]", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         serializer.save()
-        print("Storage backend used:", user.profilePicture.storage.__class__)
 
-        print("[SAVE SUCCESS] File saved to:", serializer.data['profilePicture'])
     except Exception as e:
-        print("[SAVE ERROR]", e)
         return Response({"error": "File save failed", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({
