@@ -12,14 +12,21 @@ from listing.serializers import CreateListingSerializer, ListingSerializer, Spec
 from user.models import User
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_listings(request):
     """
     Fetch all listings
     """
-    listings = Listing.objects.filter(hidden=False)
+
+    sort = request.query_params.get("sort", "dateListed")
+    direction = request.query_params.get("dir", "desc")
+
+    if direction == "desc":
+        sort = f"-{sort}"
+
+    listings = Listing.objects.filter(hidden=False).order_by(sort)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -31,7 +38,14 @@ def get_listings_by_keyword(request, keyword):
     """
     Fetch all listings that have a keyword in the title
     """
-    listings = Listing.objects.filter(title__icontains=keyword, hidden=False)
+
+    sort = request.query_params.get("sort", "dateListed")
+    direction = request.query_params.get("dir", "desc")
+
+    if direction == "desc":
+        sort = f"-{sort}"
+
+    listings = Listing.objects.filter(title__icontains=keyword, hidden=False).order_by(sort)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
