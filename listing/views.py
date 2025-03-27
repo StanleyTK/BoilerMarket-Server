@@ -20,8 +20,8 @@ def get_all_listings(request):
     Fetch all listings
     """
 
-    sort = request.query_params.get("sort", "dateListed")
-    direction = request.query_params.get("dir", "desc")
+    sort = request.data.get("sort", "dateListed")
+    direction = request.data.get("dir", "desc")
 
     if direction == "desc":
         sort = f"-{sort}"
@@ -31,7 +31,7 @@ def get_all_listings(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_listings_by_keyword(request, keyword):
@@ -39,8 +39,8 @@ def get_listings_by_keyword(request, keyword):
     Fetch all listings that have a keyword in the title
     """
 
-    sort = request.query_params.get("sort", "dateListed")
-    direction = request.query_params.get("dir", "desc")
+    sort = request.data.get("sort", "dateListed")
+    direction = request.data.get("dir", "desc")
 
     if direction == "desc":
         sort = f"-{sort}"
