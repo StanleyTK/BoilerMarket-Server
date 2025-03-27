@@ -6,3 +6,12 @@ class Message(models.Model):
     recipient = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timeSent = models.DateTimeField(auto_now_add=True)
+    room = models.ForeignKey('Room', on_delete=models.CASCADE)
+
+class Room(models.Model):
+    rid = models.AutoField(primary_key=True)
+    seller = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='seller_room')
+    buyer = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='buyer_room')
+    listing = models.ForeignKey('listing.Listing', on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('seller', 'buyer', 'listing')

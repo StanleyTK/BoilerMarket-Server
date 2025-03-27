@@ -5,3 +5,6 @@ python-decouple
 djangorestframework
 django-cors-headers
 sendgrid
+channels
+channels-redis
+daphne
