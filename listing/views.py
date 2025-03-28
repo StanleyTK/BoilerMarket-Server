@@ -22,30 +22,17 @@ def get_all_listings(request):
 
     sort = request.data.get("sort", "dateListed")
     direction = request.data.get("dir", "desc")
+    keyword = request.data.get("keyword", None)
 
     if direction == "desc":
         sort = f"-{sort}"
 
-    listings = Listing.objects.filter(hidden=False).order_by(sort)
-    serializer = ListingSerializer(listings, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    listings = Listing.objects.filter(hidden=False)
 
+    if keyword:
+        listings = listings.filter(title__icontains=keyword)
 
-@api_view(["POST"])
-@authentication_classes([FirebaseEmailVerifiedAuthentication])
-@permission_classes([IsAuthenticated])
-def get_listings_by_keyword(request, keyword):
-    """
-    Fetch all listings that have a keyword in the title
-    """
-
-    sort = request.data.get("sort", "dateListed")
-    direction = request.data.get("dir", "desc")
-
-    if direction == "desc":
-        sort = f"-{sort}"
-
-    listings = Listing.objects.filter(title__icontains=keyword, hidden=False).order_by(sort)
+    listings = listings.order_by(sort)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
