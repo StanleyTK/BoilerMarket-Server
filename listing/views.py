@@ -22,12 +22,32 @@ def get_all_listings(request):
 
     sort = request.data.get("sort", "dateListed")
     direction = request.data.get("dir", "desc")
+    category = request.data.get("categoryFilter", None)
+    date_range = request.data.get("dateFilter", None) # Current values: '', week, month
+    price_range = request.data.get("priceFilter", None)
+    # location = request.data.get("locationFilter", None)
     keyword = request.data.get("keyword", None)
 
     if direction == "desc":
         sort = f"-{sort}"
 
     listings = Listing.objects.filter(hidden=False)
+
+    if category:
+        listings = listings.filter(category__iexact=category)
+
+    if date_range:
+        if date_range == "week":
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - django.timedelta(days=7))
+        elif date_range == "month":
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - django.timedelta(days=30))
+
+    if price_range:
+        try:
+            min_price, max_price = map(float, price_range.split("-"))
+            listings = listings.filter(price__gte=min_price, price__lte=max_price)
+        except ValueError:
+            return Response({"error": "Invalid price range format. Use 'min-max' format."}, status=status.HTTP_400_BAD_REQUEST)
 
     if keyword:
         listings = listings.filter(title__icontains=keyword)
