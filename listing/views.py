@@ -25,7 +25,7 @@ def get_all_listings(request):
     category = request.data.get("categoryFilter", None)
     date_range = request.data.get("dateFilter", None) # Current values: '', week, month
     price_range = request.data.get("priceFilter", None)
-    # location = request.data.get("locationFilter", None)
+    location = request.data.get("locationFilter", None)
     keyword = request.data.get("keyword", None)
 
     if direction == "desc":
@@ -35,6 +35,9 @@ def get_all_listings(request):
 
     if category:
         listings = listings.filter(category__iexact=category)
+
+    if location:
+        listings = listings.filter(location__iexact=location)
 
     if date_range:
         if date_range == "week":
@@ -93,6 +96,7 @@ def create_listing(request):
         price=validated_data['price'],
         original_price=validated_data['price'],
         category=validated_data['category'],
+        location=validated_data['location'],
         user=user,
         hidden=validated_data['hidden']
     )
