@@ -12,6 +12,23 @@ from message.models import Room, Message
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
+def get_room(request, room_id):
+    try:
+        room = Room.objects.get(rid=room_id)
+        response = {
+            "rid": room.rid,
+            "seller": room.seller.displayName,
+            "buyer": room.buyer.displayName,
+            "listingName": room.listing.title,
+            "listingId": room.listing.id,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    except Room.DoesNotExist:
+        return Response({"error": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
 def get_rooms(request):
     user = User.objects.get(uid=request.user.username)
     rooms = Room.objects.filter(seller=user) | Room.objects.filter(buyer=user)
@@ -50,3 +67,21 @@ def get_or_create_room(request):
     room = Room.objects.create(seller=seller, buyer=buyer, listing=listing)
     room.save()
     return Response({"rid": room.rid}, status=status.HTTP_201_CREATED)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def get_messages(request, rid):
+    room = Room.objects.get(rid=rid)
+    if request.user.username != room.seller.uid or request.user.username != room.buyer.uid:
+        return Response({"error": "You are not part of this room"}, status=status.HTTP_400_BAD_REQUEST)
+    messages = Message.objects.filter(room=room)
+    response = []
+    for message in messages:
+        response.append({
+            "mid": message.mid,
+            "sender": message.sender.displayName,
+            "content": message.content,
+            "timeSent": message.timeSent,
+        })
+    return Response({"messages": response}, status=status.HTTP_200_OK)
