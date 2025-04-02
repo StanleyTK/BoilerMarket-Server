@@ -15,6 +15,8 @@ from message.models import Room, Message
 def get_room(request, room_id):
     try:
         room = Room.objects.get(rid=room_id)
+        if request.user.username != room.seller.uid and request.user.username != room.buyer.uid:
+            return Response({"error": "You are not part of this room"}, status=status.HTTP_400_BAD_REQUEST)
         response = {
             "rid": room.rid,
             "seller": room.seller.displayName,
@@ -71,15 +73,14 @@ def get_or_create_room(request):
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
-def get_messages(request, rid):
-    room = Room.objects.get(rid=rid)
-    if request.user.username != room.seller.uid or request.user.username != room.buyer.uid:
+def get_messages(request, room_id):
+    room = Room.objects.get(rid=room_id)
+    if request.user.username != room.seller.uid and request.user.username != room.buyer.uid:
         return Response({"error": "You are not part of this room"}, status=status.HTTP_400_BAD_REQUEST)
-    messages = Message.objects.filter(room=room)
+    messages = Message.objects.filter(room=room).order_by('timeSent')
     response = []
     for message in messages:
         response.append({
-            "mid": message.mid,
             "sender": message.sender.displayName,
             "content": message.content,
             "timeSent": message.timeSent,
