@@ -7,6 +7,7 @@ class CreateListingSerializer(serializers.Serializer):
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     category = serializers.CharField()
+    location = serializers.ChoiceField(choices=["chauncy", "west campus", "ross ade", "lafayette", "other"])
     user = serializers.CharField()
     hidden = serializers.BooleanField()
     media = serializers.ListField(
