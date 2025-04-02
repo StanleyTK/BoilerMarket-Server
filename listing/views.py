@@ -53,6 +53,21 @@ def get_listings_by_user(request, uid):
     serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(["GET"])
+@permission_classes([AllowAny]) 
+def get_listing_by_lid(request, lid=None):
+    """
+    Fetch a lising by LID.
+    - If a LID is provided, return that listing.
+    """
+    try:
+        listing = Listing.objects.get(id=lid)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SpecificListingSerializer(listing)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 @api_view(["POST"])
