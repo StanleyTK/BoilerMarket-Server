@@ -13,14 +13,17 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddlewareStack
+from message.middleware import FirebaseAuthMiddleware
 import message.routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter(message.routing.websocket_urlpatterns)
+    "websocket": FirebaseAuthMiddleware(
+        AuthMiddlewareStack(
+            URLRouter(message.routing.websocket_urlpatterns)
+        ),
     ),
 })
 # application = get_asgi_application()
