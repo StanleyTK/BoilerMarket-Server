@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
+from datetime import timedelta
+
 from firebase_admin import auth as firebase_admin_auth
 
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
@@ -41,9 +43,9 @@ def get_all_listings(request):
 
     if date_range:
         if date_range == "week":
-            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - django.timedelta(days=7))
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - timedelta(days=7))
         elif date_range == "month":
-            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - django.timedelta(days=30))
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - timedelta(days=30))
 
     if price_range:
         try:
