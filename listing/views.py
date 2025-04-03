@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 
+from datetime import timedelta
+
 from firebase_admin import auth as firebase_admin_auth
 
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
@@ -12,26 +14,50 @@ from listing.serializers import CreateListingSerializer, ListingSerializer, Spec
 from user.models import User
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_listings(request):
     """
     Fetch all listings
     """
+
+    sort = request.data.get("sort", "dateListed")
+    direction = request.data.get("dir", "desc")
+    category = request.data.get("categoryFilter", None)
+    date_range = request.data.get("dateFilter", None) # Current values: '', week, month
+    price_range = request.data.get("priceFilter", None)
+    location = request.data.get("locationFilter", None)
+    keyword = request.data.get("keyword", None)
+
+    if direction == "desc":
+        sort = f"-{sort}"
+
     listings = Listing.objects.filter(hidden=False)
-    serializer = ListingSerializer(listings, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
+    if category:
+        listings = listings.filter(category__iexact=category)
 
-@api_view(["GET"])
-@authentication_classes([FirebaseEmailVerifiedAuthentication])
-@permission_classes([IsAuthenticated])
-def get_listings_by_keyword(request, keyword):
-    """
-    Fetch all listings that have a keyword in the title
-    """
-    listings = Listing.objects.filter(title__icontains=keyword, hidden=False)
+    if location:
+        listings = listings.filter(location__iexact=location)
+
+    if date_range:
+        if date_range == "week":
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - timedelta(days=7))
+        elif date_range == "month":
+            listings = listings.filter(dateListed__gte=django.utils.timezone.now() - timedelta(days=30))
+
+    if price_range:
+        try:
+            min_price, max_price = map(float, price_range.split("-"))
+            listings = listings.filter(price__gte=min_price, price__lte=max_price)
+        except ValueError:
+            return Response({"error": "Invalid price range format. Use 'min-max' format."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if keyword:
+        listings = listings.filter(title__icontains=keyword)
+
+    listings = listings.order_by(sort)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -53,6 +79,21 @@ def get_listings_by_user(request, uid):
     serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(["GET"])
+@permission_classes([AllowAny]) 
+def get_listing_by_lid(request, lid=None):
+    """
+    Fetch a lising by LID.
+    - If a LID is provided, return that listing.
+    """
+    try:
+        listing = Listing.objects.get(id=lid)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SpecificListingSerializer(listing)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 @api_view(["POST"])
@@ -72,6 +113,7 @@ def create_listing(request):
         price=validated_data['price'],
         original_price=validated_data['price'],
         category=validated_data['category'],
+        location=validated_data['location'],
         user=user,
         hidden=validated_data['hidden']
     )

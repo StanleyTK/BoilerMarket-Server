@@ -7,13 +7,17 @@ class CreateListingSerializer(serializers.Serializer):
     description = serializers.CharField()
     price = serializers.DecimalField(max_digits=10, decimal_places=2)
     category = serializers.CharField()
+    location = serializers.ChoiceField(choices=["chauncy", "west campus", "ross ade", "lafayette", "other"])
     user = serializers.CharField()
     hidden = serializers.BooleanField()
     saves = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='saved_by')
     media = serializers.ListField(
         child=serializers.FileField(),
         required=True
-    )
+    ),
+    saves = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='saved_by')
+
+    
 
 class DeleteListingSerializer(serializers.Serializer):
     id = serializers.IntegerField()

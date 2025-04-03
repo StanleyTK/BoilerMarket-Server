@@ -152,6 +152,8 @@ def get_user_info(request, uid=None):
 
 
 
+
+
 @api_view(["PUT", "PATCH"])
 @authentication_classes([FirebaseAuthentication])
 @permission_classes([IsAuthenticated])
