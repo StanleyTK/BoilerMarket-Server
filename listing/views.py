@@ -64,7 +64,10 @@ def get_all_listings(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_top_listings(request):
-    listings = Listing.objects.order_by("-dateListed")[:12]
+    # listings = Listing.objects.order_by("-dateListed")[:12]
+    user = User.objects.get(uid=request.user) if request.user.is_authenticated else None
+    blocked_users = user.blocked_users.all() if user else []
+    listings = Listing.objects.exclude(user__in=blocked_users).order_by("-dateListed")[:12]
     serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -90,6 +93,12 @@ def get_listing_by_lid(request, lid=None):
         listing = Listing.objects.get(id=lid)
     except Listing.DoesNotExist:
         return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+    request_user = User.objects.get(uid=request.user)
+    listing_user = listing.user
+    if request_user in listing_user.blocked_users.all():
+        return Response({"error": "You are blocked by this user"}, status=status.HTTP_403_FORBIDDEN)
+    if listing_user in request_user.blocked_users.all():
+        return Response({"error": "You have blocked this user"}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = SpecificListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)
