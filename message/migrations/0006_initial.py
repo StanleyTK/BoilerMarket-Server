@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('listing', '0002_rename_orginal_price_listing_original_price_and_more'),
         ('message', '0005_remove_room_messages_alter_room_unique_together_and_more'),
         ('user', '0003_user_purdueverificationlastsent'),
     ]

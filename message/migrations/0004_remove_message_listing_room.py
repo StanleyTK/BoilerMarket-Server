@@ -7,7 +7,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('listing', '0002_rename_orginal_price_listing_original_price_and_more'),
         ('message', '0003_initial'),
         ('user', '0003_user_purdueverificationlastsent'),
     ]

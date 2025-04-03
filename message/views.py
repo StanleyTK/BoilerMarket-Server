@@ -45,7 +45,10 @@ def get_rooms(request):
                 "listingName": room.listing.title,
                 "listingId": room.listing.id,
                 "recentMessage": recent_message.content if recent_message else None,
+                "timeSent": recent_message.timeSent if recent_message else None,
             })
+
+    response.sort(key=lambda x: x["timeSent"], reverse=True)
     return Response({"rooms": response}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
