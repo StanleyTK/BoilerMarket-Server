@@ -7,7 +7,7 @@ from rest_framework import status
 from firebase_admin import auth as firebase_admin_auth
 
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
-from listing.models import Listing
+from listing.models import Listing, ListingMedia
 from listing.serializers import CreateListingSerializer, ListingSerializer, SpecificListingSerializer, SpecificListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
@@ -44,7 +44,7 @@ def get_top_listings(request):
 
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_listings_by_user(request, uid):
     """
     Fetch all listings that a user owns
@@ -59,15 +59,11 @@ def get_listings_by_user(request, uid):
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def create_listing(request):
-    """
-    Create a listing
-    """
     serializer = CreateListingSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     validated_data = serializer.validated_data
-    
     user = User.objects.get(uid=validated_data['user'])
 
     listing = Listing.objects.create(
@@ -77,17 +73,23 @@ def create_listing(request):
         original_price=validated_data['price'],
         category=validated_data['category'],
         user=user,
-        hidden=validated_data['hidden'] # Support for creating a listing as hidden, can be removed if not used
+        hidden=validated_data['hidden']
     )
 
+    # Save each media file
+    media_files = request.FILES.getlist('media')
+    for f in media_files:
+        ListingMedia.objects.create(listing=listing, file=f)
+
     return Response({"message": "Listing created"}, status=status.HTTP_201_CREATED)
+
 
 @api_view(["DELETE"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_listing(request, listing_id):
     """
-    Delete a listing
+    Delete a listing and its associated media from S3
     """
     auth_header = request.META.get("HTTP_AUTHORIZATION", "")
     token = ""
@@ -97,7 +99,7 @@ def delete_listing(request, listing_id):
     try:
         decoded_token = firebase_admin_auth.verify_id_token(token)
         token_uid = decoded_token.get("uid")
-    except Exception as e:
+    except Exception:
         return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
     
     try:
@@ -112,6 +114,12 @@ def delete_listing(request, listing_id):
     
     if listing.user != user:
         return Response({"error": "User does not own this listing"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if hasattr(listing, 'media'):
+        for media in listing.media.all():
+            media.file.delete(save=False)
+            media.delete()
+
 
     listing.delete()
 

@@ -28,9 +28,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "uid", "email", "purdueEmail", "purdueEmailVerified", "displayName",
-            "rating", "bio", "admin", "banned"
+            "rating", "bio", "admin", "banned", "profilePicture"
         ]
-        # Mark certain fields as read-only so they can’t be updated by the user.
         read_only_fields = ["uid", "email", "rating", "admin", "banned"]
 
 class EditUserSerializer(serializers.ModelSerializer):
@@ -38,11 +37,16 @@ class EditUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["purdueEmail", "displayName", "bio"]
+        fields = ["purdueEmail", "displayName", "bio", "profilePicture"]
 
     def validate_displayName(self, value):
         raw_value = self.initial_data.get("displayName")
         if not isinstance(raw_value, str):
             raise serializers.ValidationError("displayName must be a string")
         return value
-    
+
+
+class UploadProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profilePicture']

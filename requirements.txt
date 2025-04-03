@@ -8,3 +8,6 @@ sendgrid
 channels
 channels-redis
 daphne
+django-storages
+boto3
+Pillow

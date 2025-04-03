@@ -1,4 +1,6 @@
+import os
 import django
+from django.conf import settings
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +11,7 @@ from firebase_admin import auth as firebase_admin_auth
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
-from user.serializers import AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, EditUserSerializer, UserSerializer, VerifyPurdueEmailSerializer
+from user.serializers import AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, EditUserSerializer, UploadProfilePictureSerializer, UserSerializer, VerifyPurdueEmailSerializer
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from decouple import config
@@ -162,21 +164,31 @@ def update_user_info(request):
     try:
         decoded_token = firebase_admin_auth.verify_id_token(token)
         token_uid = decoded_token.get("uid")
-    except Exception as e:
+    except Exception:
         return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     try:
         user = User.objects.get(uid=token_uid)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+    remove = request.data.get("removeProfilePicture") == "true"
+    new_profile_picture = request.FILES.get("profilePicture")
+
+    if user.profilePicture and (remove or new_profile_picture):
+        user.profilePicture.delete(save=False)
+
+    if remove:
+        user.profilePicture = None
+
     serializer = EditUserSerializer(user, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     serializer.save()
     full_serializer = UserSerializer(user)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
@@ -184,3 +196,42 @@ def update_user_info(request):
 def check_email_auth(request):
     return Response({"message": "User is Verified"}, status=status.HTTP_200_OK)
 
+
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_profile_picture(request):
+    print("DJANGO_SETTINGS_MODULE:", os.environ.get("DJANGO_SETTINGS_MODULE"))
+    print("DEFAULT_FILE_STORAGE from settings:", settings.DEFAULT_FILE_STORAGE)
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split("Bearer ")[1]
+
+    try:
+        decoded_token = firebase_admin_auth.verify_id_token(token)
+        token_uid = decoded_token.get("uid")
+    except Exception as e:
+        return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        user = User.objects.get(uid=token_uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+    serializer = UploadProfilePictureSerializer(user, data=request.data, partial=True)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        serializer.save()
+
+    except Exception as e:
+        return Response({"error": "File save failed", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({
+        "message": "Profile picture uploaded successfully",
+        "profilePicture": serializer.data['profilePicture']
+    }, status=status.HTTP_200_OK)
