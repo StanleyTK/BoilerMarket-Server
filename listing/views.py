@@ -64,7 +64,21 @@ def get_all_listings(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_top_listings(request):
-    listings = Listing.objects.order_by("-dateListed")[:12]
+    user = User.objects.get(uid=request.user) if request.user.is_authenticated else None
+    print(user)
+    blocked_users = user.blockedUsers.all() if user else []
+    print(blocked_users)
+    listings = Listing.objects.exclude(user__in=blocked_users).order_by("-dateListed")[:12]
+    serializer = SpecificListingSerializer(listings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([AllowAny])
+def get_top_listings_verified(request):
+    user = User.objects.get(uid=request.user) if request.user.is_authenticated else None
+    blocked_users = user.blockedUsers.all() if user else []
+    listings = Listing.objects.exclude(user__in=blocked_users).order_by("-dateListed")[:12]
     serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -90,6 +104,15 @@ def get_listing_by_lid(request, lid=None):
         listing = Listing.objects.get(id=lid)
     except Listing.DoesNotExist:
         return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+    # request_user = User.objects.get(uid=request.user)
+    # listing_user = listing.user
+    # print(f"Request user: {request_user.displayName}, Listing user: {listing_user.displayName}")
+    # print(f"Request user blocked users: {[user.displayName for user in request_user.blocked_users.all()]}")
+    # print(f"Listing user blocked users: {[user.displayName for user in listing_user.blocked_users.all()]}")
+    # if request_user in listing_user.blocked_users.all():
+    #     return Response({"error": "You are blocked by this user"}, status=status.HTTP_403_FORBIDDEN)
+    # if listing_user in request_user.blocked_users.all():
+    #     return Response({"error": "You have blocked this user"}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = SpecificListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -245,21 +268,23 @@ def get_saved_listings(request):
     Get all saved listings for a user
     """
     user = User.objects.get(uid=request.user)
-    listings = Listing.objects.filter(saved_by=user)
+    blocked_users = user.blockedUsers.all() if user else []
+
+    listings = Listing.objects.filter(saved_by=user).exclude(user__in=blocked_users)
     serializer = SpecificListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(["GET"])
-@permission_classes([AllowAny]) 
-def get_listing_by_lid(request, lid=None):
-    """
-    Fetch a lising by LID.
-    - If a LID is provided, return that listing.
-    """
-    try:
-        listing = Listing.objects.get(id=lid)
-    except Listing.DoesNotExist:
-        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(["GET"])
+# @permission_classes([AllowAny]) 
+# def get_listing_by_lid(request, lid=None):
+#     """
+#     Fetch a lising by LID.
+#     - If a LID is provided, return that listing.
+#     """
+#     try:
+#         listing = Listing.objects.get(id=lid)
+#     except Listing.DoesNotExist:
+#         return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = SpecificListingSerializer(listing)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+#     serializer = SpecificListingSerializer(listing)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
