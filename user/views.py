@@ -260,10 +260,17 @@ def block_user(request, uid):
 @permission_classes([IsAuthenticated])
 def get_blocked_users(request):
     user = User.objects.get(uid=request.user.username)
-
     blocked_users = user.blockedUsers.all()
-    display_names = [blocked_user.displayName for blocked_user in blocked_users]
-    return Response({"blockedUsers": display_names}, status=status.HTTP_200_OK)
+
+    display_names = [
+        {
+            "displayName": blocked_user.displayName, 
+            "uid": blocked_user.uid
+        }
+        for blocked_user in blocked_users
+    ]
+
+    return Response(display_names, status=200)
 
 @api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
