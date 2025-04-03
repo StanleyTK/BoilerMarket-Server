@@ -52,6 +52,7 @@ REST_FRAMEWORK = {
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,10 +63,19 @@ INSTALLED_APPS = [
     'server',
     'corsheaders',
     'user',
+    'channels',
     'listing',
+    'message',
     'storages',
 
 ]
+
+ASGI_APPLICATION = "server.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
