@@ -45,7 +45,7 @@ class SpecificListingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'price', 'displayName',
             'original_price', 'category', 'hidden', 'views',
-            'saved_by', 'dateListed', 'sold', 'uid', 'profilePicture', 'media'
+            'saved_by', 'dateListed', 'sold', 'uid', 'profilePicture', 'media', 'location'
         ]
 
     def get_profilePicture(self, obj):
@@ -65,7 +65,7 @@ class ListingSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "description", "price", "original_price",
             "category", "user", "hidden", "views", "saved_by",
-            "dateListed", "sold", "media"
+            "dateListed", "sold", "media", "location"
         ]
         read_only_fields = ["id", "original_price", "user", "dateListed"]
 
