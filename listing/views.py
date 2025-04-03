@@ -160,3 +160,64 @@ def update_listing(request, listing_id):
     serializer.save()
     full_serializer = ListingSerializer(listing)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def save_listing(request, listing_id):
+    """
+    Have a user save a listing
+    """
+    try:
+        user = User.objects.get(uid=request.user)
+        listing = Listing.objects.get(id=listing_id)
+    except (User.DoesNotExist, Listing.DoesNotExist):
+        return Response({"error": "User or Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    listing.saved_by.add(user)
+    return Response({"message": "Listing saved"}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def unsave_listing(request, listing_id):
+    """
+    Have a user un save a listing
+    """
+    try:
+        user = User.objects.get(uid=request.user)
+        listing = Listing.objects.get(id=listing_id)
+    except (User.DoesNotExist, Listing.DoesNotExist):
+        return Response({"error": "User or Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    listing.saved_by.remove(user)
+    return Response({"message": "Listing unsaved"}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_saved_listings(request):
+    """
+    Get all saved listings for a user
+    """
+    user = User.objects.get(uid=request.user)
+    listings = Listing.objects.filter(saved_by=user)
+    serializer = SpecificListingSerializer(listings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([AllowAny]) 
+def get_listing_by_lid(request, lid=None):
+    """
+    Fetch a lising by LID.
+    - If a LID is provided, return that listing.
+    """
+    try:
+        listing = Listing.objects.get(id=lid)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SpecificListingSerializer(listing)
+    return Response(serializer.data, status=status.HTTP_200_OK)
