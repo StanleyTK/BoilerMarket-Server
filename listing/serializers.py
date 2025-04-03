@@ -10,6 +10,7 @@ class CreateListingSerializer(serializers.Serializer):
     location = serializers.ChoiceField(choices=["chauncy", "west campus", "ross ade", "lafayette", "other"])
     user = serializers.CharField()
     hidden = serializers.BooleanField()
+    saves = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='saved_by')
     media = serializers.ListField(
         child=serializers.FileField(),
         required=True

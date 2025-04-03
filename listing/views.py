@@ -203,6 +203,7 @@ def update_listing(request, listing_id):
     full_serializer = ListingSerializer(listing)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
 @permission_classes([IsAuthenticated])
@@ -246,4 +247,19 @@ def get_saved_listings(request):
     user = User.objects.get(uid=request.user)
     listings = Listing.objects.filter(saved_by=user)
     serializer = SpecificListingSerializer(listings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@permission_classes([AllowAny]) 
+def get_listing_by_lid(request, lid=None):
+    """
+    Fetch a lising by LID.
+    - If a LID is provided, return that listing.
+    """
+    try:
+        listing = Listing.objects.get(id=lid)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SpecificListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)
