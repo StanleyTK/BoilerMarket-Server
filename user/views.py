@@ -250,7 +250,7 @@ def block_user(request, uid):
         (Q(seller=user, buyer=blocked_user) | Q(seller=blocked_user, buyer=user))
     )
 
-    room_ids = rooms.values_list('id', flat=True)
+    room_ids = rooms.values_list('rid', flat=True)
     Message.objects.filter(room_id__in=room_ids).delete()
     rooms.delete()
     return Response({"message": "User blocked"}, status=status.HTTP_200_OK)

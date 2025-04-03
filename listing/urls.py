@@ -13,7 +13,6 @@ urlpatterns = [
     path('update/<str:listing_id>/', update_listing, name='update_listing'),
     path('save/<int:listing_id>/', save_listing, name='save-listing'),
     path('unsave/<int:listing_id>/', unsave_listing, name='unsave-listing'),
-    path('getSaved/', get_saved_listings, name='get-saved-listings'),
-    path('getListing/<str:lid>/', get_listing_by_lid, name=" get_listing_by_lid"),
+    path('getSaved/', get_saved_listings, name='get-saved-listings')
 
 ]
