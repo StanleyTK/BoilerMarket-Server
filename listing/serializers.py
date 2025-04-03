@@ -13,7 +13,10 @@ class CreateListingSerializer(serializers.Serializer):
     media = serializers.ListField(
         child=serializers.FileField(),
         required=True
-    )
+    ),
+    saves = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='saved_by')
+
+    
 
 class DeleteListingSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -41,7 +44,7 @@ class SpecificListingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'price', 'displayName',
             'original_price', 'category', 'hidden', 'views',
-            'saves', 'dateListed', 'sold', 'uid', 'profilePicture', 'media'
+            'saved_by', 'dateListed', 'sold', 'uid', 'profilePicture', 'media'
         ]
 
     def get_profilePicture(self, obj):
@@ -60,7 +63,7 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = [
             "id", "title", "description", "price", "original_price",
-            "category", "user", "hidden", "views", "saves",
+            "category", "user", "hidden", "views", "saved_by",
             "dateListed", "sold", "media"
         ]
         read_only_fields = ["id", "original_price", "user", "dateListed"]
