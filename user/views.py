@@ -1,6 +1,7 @@
 import os
 import django
 from django.conf import settings
+from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -8,6 +9,7 @@ from rest_framework import status
 
 from firebase_admin import auth as firebase_admin_auth
 
+from message.models import Message, Room
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
@@ -150,10 +152,6 @@ def get_user_info(request, uid=None):
     serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
-
-
 @api_view(["PUT", "PATCH"])
 @authentication_classes([FirebaseAuthentication])
 @permission_classes([IsAuthenticated])
@@ -191,14 +189,11 @@ def update_user_info(request):
     full_serializer = UserSerializer(user)
     return Response(full_serializer.data, status=status.HTTP_200_OK)
 
-
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def check_email_auth(request):
     return Response({"message": "User is Verified"}, status=status.HTTP_200_OK)
-
-
 
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
@@ -237,3 +232,59 @@ def upload_profile_picture(request):
         "message": "Profile picture uploaded successfully",
         "profilePicture": serializer.data['profilePicture']
     }, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def block_user(request, uid):
+    try:
+        blocked_user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        user = User.objects.get(uid=request.user.username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    if blocked_user in user.blockedUsers.all():
+        return Response({"error": "User already blocked"}, status=status.HTTP_400_BAD_REQUEST)
+    user.blockedUsers.add(blocked_user)
+    user.save()
+    rooms = Room.objects.filter(
+        (Q(seller=user, buyer=blocked_user) | Q(seller=blocked_user, buyer=user))
+    )
+
+    room_ids = rooms.values_list('id', flat=True)
+    Message.objects.filter(room_id__in=room_ids).delete()
+    rooms.delete()
+    return Response({"message": "User blocked"}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def get_blocked_users(request):
+    try:
+        user = User.objects.get(uid=request.user.username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    blocked_users = user.blockedUsers.all()
+    display_names = [blocked_user.displayName for blocked_user in blocked_users]
+    return Response({"blockedUsers": display_names}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def unblock_user(request, uid):
+    try:
+        blocked_user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        user = User.objects.get(uid=request.user.username)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    if blocked_user not in user.blockedUsers.all():
+        return Response({"error": "User is not blocked"}, status=status.HTTP_400_BAD_REQUEST)
+    user.blockedUsers.remove(blocked_user)
+    user.save()
+    return Response({"message": "User unblocked"}, status=status.HTTP_200_OK)

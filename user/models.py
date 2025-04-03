@@ -20,6 +20,7 @@ class User(models.Model):
     bio = models.TextField(null=True, blank=True)
     admin = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
+    blocked = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by', blank=True)
 
     profilePicture = models.ImageField(
         storage=S3Boto3Storage(),
