@@ -241,10 +241,7 @@ def block_user(request, uid):
         blocked_user = User.objects.get(uid=uid)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    try:
-        user = User.objects.get(uid=request.user.username)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    user = User.objects.get(uid=request.user.username)
     if blocked_user in user.blockedUsers.all():
         return Response({"error": "User already blocked"}, status=status.HTTP_400_BAD_REQUEST)
     user.blockedUsers.add(blocked_user)
@@ -262,10 +259,7 @@ def block_user(request, uid):
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def get_blocked_users(request):
-    try:
-        user = User.objects.get(uid=request.user.username)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    user = User.objects.get(uid=request.user.username)
 
     blocked_users = user.blockedUsers.all()
     display_names = [blocked_user.displayName for blocked_user in blocked_users]
@@ -279,10 +273,7 @@ def unblock_user(request, uid):
         blocked_user = User.objects.get(uid=uid)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    try:
-        user = User.objects.get(uid=request.user.username)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    user = User.objects.get(uid=request.user.username)
     if blocked_user not in user.blockedUsers.all():
         return Response({"error": "User is not blocked"}, status=status.HTTP_400_BAD_REQUEST)
     user.blockedUsers.remove(blocked_user)
