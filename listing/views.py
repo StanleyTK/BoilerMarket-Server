@@ -228,7 +228,7 @@ def unsave_listing(request, listing_id):
     Have a user un save a listing
     """
     try:
-        user = User.objects.get(uid=request.user.uid)
+        user = User.objects.get(uid=request.user)
         listing = Listing.objects.get(id=listing_id)
     except (User.DoesNotExist, Listing.DoesNotExist):
         return Response({"error": "User or Listing not found"}, status=status.HTTP_404_NOT_FOUND)
