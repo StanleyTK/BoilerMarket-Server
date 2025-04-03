@@ -17,7 +17,7 @@ class Listing(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     hidden = models.BooleanField(default=False)
     views = models.IntegerField(default=0)
-    saves = models.IntegerField(default=0)
+    saved_by = models.ManyToManyField(User, related_name='saved_listings', blank=True)
     dateListed = models.DateTimeField(auto_now_add=True)
     sold = models.BooleanField(default=False)
 
