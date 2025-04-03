@@ -20,7 +20,6 @@ class User(models.Model):
     bio = models.TextField(null=True, blank=True)
     admin = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
-
     profilePicture = models.ImageField(
         storage=S3Boto3Storage(),
         upload_to=user_profile_picture_path,

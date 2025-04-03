@@ -11,5 +11,6 @@ urlpatterns = [
     path('verify_purdue_email/', verify_purdue_email, name="verify_purdue_email"),
     path('check_email_auth', check_email_auth, name="check_email_auth"),
     path('upload_profile_picture/', upload_profile_picture, name="upload_profile_picture"),
+    
 
 ]

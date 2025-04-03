@@ -11,7 +11,7 @@ from firebase_admin import auth as firebase_admin_auth
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
-from user.serializers import AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, EditUserSerializer, UploadProfilePictureSerializer, UserSerializer, VerifyPurdueEmailSerializer
+from user.serializers import EditBlockedUsersSerializer, AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, EditUserSerializer, UploadProfilePictureSerializer, UserSerializer, VerifyPurdueEmailSerializer
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from decouple import config
@@ -235,3 +235,11 @@ def upload_profile_picture(request):
         "message": "Profile picture uploaded successfully",
         "profilePicture": serializer.data['profilePicture']
     }, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([FirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_blocked_users(self, request):
+    user = request.user
+    blocked_uids = user.blockedUsers.values_list('uid', flat=True)
+    return Response({"blockedUsers": list(blocked_uids)})

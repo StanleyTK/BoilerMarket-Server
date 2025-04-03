@@ -24,11 +24,16 @@ class CreateUserSerializer(serializers.Serializer):
     bio = serializers.CharField(allow_blank=True)
 
 class UserSerializer(serializers.ModelSerializer):
+    blockedUsers = serializers.SlugRelatedField(
+        many=True,
+        slug_field='uid',
+        read_only=True
+    )
     class Meta:
         model = User
         fields = [
             "uid", "email", "purdueEmail", "purdueEmailVerified", "displayName",
-            "rating", "bio", "admin", "banned", "profilePicture"
+            "rating", "bio", "admin", "banned", "profilePicture", "blockedUsers"
         ]
         read_only_fields = ["uid", "email", "rating", "admin", "banned"]
 
@@ -50,3 +55,14 @@ class UploadProfilePictureSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['profilePicture']
+
+class EditBlockedUsersSerializer(serializers.ModelSerializer):
+    blockedUsers = serializers.SlugRelatedField(
+        many=True,
+        slug_field='uid',
+        queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = User
+        fields = ["blockedUsers"]
