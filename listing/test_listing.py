@@ -566,117 +566,180 @@ class ListingEndpointTests(APITestCase):
         self.assertEqual(len(response.json()), 1)
         self.assertEqual(response.json()[0]["title"], "Test Listing")
 
-@patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
-def test_filter_listings_by_location_price_category_date(self, mock_verify):
-    """
-    Test filtering listings by location, price, category, and date/time listed.
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_filter_listings_by_location_price_category_date(self, mock_verify):
+        """
+        Test filtering listings by location, price, category, and date/time listed.
 
-    The test creates multiple listings with different attributes:
-      - Listing 1 & 6: In "New York", category "Electronics", price within 100-200, listed within a week.
-      - Listing 2: Wrong location ("Los Angeles").
-      - Listing 3: Wrong category ("Clothing").
-      - Listing 4: Price too high (250.0).
-      - Listing 5: Listed more than a week ago.
-      
-    Only listings 1 and 6 should be returned by the filter.
-    """
-    now = timezone.now()
-    # Listing 1: Should match
-    Listing.objects.create(
-        title="Electronics in New York 1",
-        description="A test listing",
-        price=120.0,
-        original_price=120.0,
-        category="Electronics",
-        location="New York",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now - timedelta(days=2)
-    )
-    # Listing 2: Wrong location
-    Listing.objects.create(
-        title="Electronics in Los Angeles",
-        description="A test listing",
-        price=120.0,
-        original_price=120.0,
-        category="Electronics",
-        location="Los Angeles",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now - timedelta(days=1)
-    )
-    # Listing 3: Wrong category
-    Listing.objects.create(
-        title="Clothing in New York",
-        description="A test listing",
-        price=120.0,
-        original_price=120.0,
-        category="Clothing",
-        location="New York",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now - timedelta(days=3)
-    )
-    # Listing 4: Price too high
-    Listing.objects.create(
-        title="Electronics in New York - Expensive",
-        description="A test listing",
-        price=250.0,
-        original_price=250.0,
-        category="Electronics",
-        location="New York",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now - timedelta(days=1)
-    )
-    # Listing 5: Date listed is older than one week.
-    # Note: auto_now_add overrides the provided date, so we update it manually.
-    listing5 = Listing.objects.create(
-        title="Electronics in New York - Old Listing",
-        description="A test listing",
-        price=150.0,
-        original_price=150.0,
-        category="Electronics",
-        location="New York",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now  # This value will be overwritten.
-    )
-    Listing.objects.filter(id=listing5.id).update(dateListed=now - timedelta(days=10))
-    
-    # Listing 6: Should match
-    Listing.objects.create(
-        title="Electronics in New York 2",
-        description="A test listing",
-        price=150.0,
-        original_price=150.0,
-        category="Electronics",
-        location="New York",
-        user=self.user,
-        hidden=False,
-        sold=False,
-        dateListed=now - timedelta(days=5)
-    )
+        The test creates multiple listings with different attributes:
+        - Listing 1 & 6: In "New York", category "Electronics", price within 100-200, listed within a week.
+        - Listing 2: Wrong location ("Los Angeles").
+        - Listing 3: Wrong category ("Clothing").
+        - Listing 4: Price too high (250.0).
+        - Listing 5: Listed more than a week ago.
+        
+        Only listings 1 and 6 should be returned by the filter.
+        """
+        now = timezone.now()
+        # Listing 1: Should match
+        Listing.objects.create(
+            title="Electronics in New York 1",
+            description="A test listing",
+            price=120.0,
+            original_price=120.0,
+            category="Electronics",
+            location="New York",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now - timedelta(days=2)
+        )
+        # Listing 2: Wrong location
+        Listing.objects.create(
+            title="Electronics in Los Angeles",
+            description="A test listing",
+            price=120.0,
+            original_price=120.0,
+            category="Electronics",
+            location="Los Angeles",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now - timedelta(days=1)
+        )
+        # Listing 3: Wrong category
+        Listing.objects.create(
+            title="Clothing in New York",
+            description="A test listing",
+            price=120.0,
+            original_price=120.0,
+            category="Clothing",
+            location="New York",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now - timedelta(days=3)
+        )
+        # Listing 4: Price too high
+        Listing.objects.create(
+            title="Electronics in New York - Expensive",
+            description="A test listing",
+            price=250.0,
+            original_price=250.0,
+            category="Electronics",
+            location="New York",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now - timedelta(days=1)
+        )
+        # Listing 5: Date listed is older than one week.
+        # Note: auto_now_add overrides the provided date, so we update it manually.
+        listing5 = Listing.objects.create(
+            title="Electronics in New York - Old Listing",
+            description="A test listing",
+            price=150.0,
+            original_price=150.0,
+            category="Electronics",
+            location="New York",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now  # This value will be overwritten.
+        )
+        Listing.objects.filter(id=listing5.id).update(dateListed=now - timedelta(days=10))
+        
+        # Listing 6: Should match
+        Listing.objects.create(
+            title="Electronics in New York 2",
+            description="A test listing",
+            price=150.0,
+            original_price=150.0,
+            category="Electronics",
+            location="New York",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=now - timedelta(days=5)
+        )
 
-    payload = {
-        "categoryFilter": "Electronics",
-        "locationFilter": "New York",
-        "priceFilter": "100-200",
-        "dateFilter": "week"  # Only include listings from the last 7 days.
-    }
-    url = reverse("get_all_listings")
-    response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    data = response.json()
+        payload = {
+            "categoryFilter": "Electronics",
+            "locationFilter": "New York",
+            "priceFilter": "100-200",
+            "dateFilter": "week"  # Only include listings from the last 7 days.
+        }
+        url = reverse("get_all_listings")
+        response = self.client.post(url, data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
 
-    # Filter the returned listings to ensure they have a price between 100 and 200.
-    filtered_results = [listing for listing in data if 100 <= float(listing["price"]) <= 200]
-    self.assertEqual(len(filtered_results), 2)
-    titles = [listing["title"] for listing in filtered_results]
-    self.assertIn("Electronics in New York 1", titles)
-    self.assertIn("Electronics in New York 2", titles)
+        # Filter the returned listings to ensure they have a price between 100 and 200.
+        filtered_results = [listing for listing in data if 100 <= float(listing["price"]) <= 200]
+        self.assertEqual(len(filtered_results), 2)
+        titles = [listing["title"] for listing in filtered_results]
+        self.assertIn("Electronics in New York 1", titles)
+        self.assertIn("Electronics in New York 2", titles)
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_create_listing_with_video_success(self, mock_verify):
+        """
+        Test that a listing can be created with a video file.
+        """
+        url = reverse("create_listing")
+        # Create a dummy video file.
+        video_file = SimpleUploadedFile("test_video.mp4", b"dummy_video_content", content_type="video/mp4")
+        
+        payload = {
+            "title": "Video Listing",
+            "description": "Listing with video",
+            "price": "75.00",
+            "category": "Test",
+            "location": "other",  # Valid location choice.
+            "user": self.user.uid,
+            "hidden": False
+        }
+        # Include the video file in the request.
+        payload["media"] = [video_file]
+        
+        response = self.client.post(url, data=payload, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # Check that the listing exists and has one media file.
+        listing = Listing.objects.get(title="Video Listing")
+        media_files = listing.media.all()
+        self.assertEqual(media_files.count(), 1)
+        # Optionally, verify that the uploaded file name is as expected.
+        self.assertTrue(media_files[0].file.name.endswith("test_video.mp4"))
+
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_create_listing_with_image_and_video_success(self, mock_verify):
+        """
+        Test that a listing can be created with both an image and a video file.
+        """
+        url = reverse("create_listing")
+        # Create dummy files for image and video.
+        image_file = SimpleUploadedFile("test_image.png", b"dummy_image_content", content_type="image/png")
+        video_file = SimpleUploadedFile("test_video.mp4", b"dummy_video_content", content_type="video/mp4")
+        
+        payload = {
+            "title": "Mixed Media Listing",
+            "description": "Listing with both image and video",
+            "price": "100.00",
+            "category": "Test",
+            "location": "other",
+            "user": self.user.uid,
+            "hidden": False
+        }
+        # Include both media files.
+        payload["media"] = [image_file, video_file]
+        
+        response = self.client.post(url, data=payload, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # Retrieve the created listing and check its media.
+        listing = Listing.objects.get(title="Mixed Media Listing")
+        media_files = listing.media.all()
+        self.assertEqual(media_files.count(), 2)
+        filenames = [m.file.name for m in media_files]
+        self.assertTrue(any(filename.endswith("test_image.png") for filename in filenames))
+        self.assertTrue(any(filename.endswith("test_video.mp4") for filename in filenames))
