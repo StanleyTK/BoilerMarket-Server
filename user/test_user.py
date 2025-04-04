@@ -47,6 +47,13 @@ class UserEndpointTests(APITestCase):
             purdueEmail="fake@purdue.edu",
             purdueEmailVerified=False
         )
+        self.other_user = User.objects.create(
+            uid="other_uid",
+            email="other@example.com",
+            displayName="Other User",
+            purdueEmail="other@purdue.edu",
+            purdueEmailVerified=True
+        )
         # We'll use a dummy token value.
         self.dummy_token = "dummy_token"
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.dummy_token}")
@@ -201,3 +208,42 @@ class UserEndpointTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = response.json()
         self.assertIn("displayName", data)
+
+    # User Story #16: Block a user
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_block_user(self, mock_verify):
+        """
+        Test blocking a user.
+        """
+        url = reverse("block_user", kwargs={"uid": self.other_user.uid})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.user.blockedUsers.filter(uid=self.other_user.uid).exists())
+
+    # User Story #16: unblock a user
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_unblock_user(self, mock_verify):
+        """
+        Test unblocking a user.
+        """
+        self.user.blockedUsers.add(self.other_user)
+        url = reverse("unblock_user", kwargs={"uid": self.other_user.uid})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.user.blockedUsers.filter(uid=self.other_user.uid).exists())
+        self.assertEqual(response.json()["message"], "User unblocked")
+
+    # User Story #16: View all blocked users
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_blocked_users(self, mock_verify):
+        """
+        Test retrieving blocked users.
+        """
+        self.user.blockedUsers.add(self.other_user)
+        url = reverse("get_blocked_users")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["uid"], self.other_user.uid)
+        self.assertEqual(data[0]["displayName"], self.other_user.displayName)
