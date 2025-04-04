@@ -26,6 +26,7 @@ class ListingEndpointTests(APITestCase):
             purdueEmail="fake@purdue.edu",
             purdueEmailVerified=True
         )
+
         # Set a dummy token in the request headers.
         self.dummy_token = "dummy_token"
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.dummy_token}")
@@ -391,3 +392,166 @@ class ListingEndpointTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertTrue(data["hidden"])
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_top_listings_verified(self, mock_verify):
+        """
+        Test that the endpoint returns the top listings for verified users.
+        User Story #16:
+        """
+
+        self.user = User.objects.create(
+            uid="default_uid",
+            email="dummy@example.com",
+            displayName="Dummy",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+        
+        for i in range(15):
+            Listing.objects.create(
+                title=f"Listing {i}",
+                description="Test top listing",
+                price=10.0 + i,
+                original_price=10.0 + i,
+                category="Test",
+                user=self.user,
+                hidden=False,
+                sold= False,
+                dateListed=timezone.now()
+            )
+        url = reverse("get_top_listings_verified")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_listing_by_lid(self, mock_verify):
+
+        """
+        User Story #12:
+        As a user, I would like to view individual listings
+
+        """
+
+        listing = Listing.objects.create(
+            title="Test Listing",
+            description="Test description",
+            price=10.0,
+            original_price=10.0,
+            category="Test",
+            user=self.user,
+            hidden=False,
+            sold=False,
+            dateListed=timezone.now()
+        )
+        url = reverse("get_listing_by_lid", kwargs={"lid": listing.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], "Test Listing")
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_save_listing(self, mock_verify):
+        """
+        User Story #11:
+        As a user, I would like to save listings
+
+        """
+        
+        self.user = User.objects.create(
+                    uid="default_uid",
+                    email="dummy@example.com",
+                    displayName="Dummy",
+                    bio="Dummy bio",
+                    purdueEmail="fake@purdue.edu",
+                    purdueEmailVerified=True
+                )
+        self.other_user = User.objects.create(
+            uid="other_uid",
+            email="other@example.com",
+            displayName="other",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+
+        listing = Listing.objects.create(
+            title="Test Listing",
+            description="Test description",
+            price=10.0,
+            original_price=10.0,
+            category="Test",
+            user=self.other_user,
+            hidden=False,
+            sold=False,
+            dateListed=timezone.now()
+        )
+        url = reverse("save-listing", kwargs={"listing_id": listing.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_unsave_listing(self, mock_verify):
+        """
+        User Story #11:
+        As a user, I would like to save listings
+
+        """
+        self.other_user = User.objects.create(
+            uid="other_uid",
+            email="other@example.com",
+            displayName="other",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+
+        listing = Listing.objects.create(
+            title="Test Listing",
+            description="Test description",
+            price=10.0,
+            original_price=10.0,
+            category="Test",
+            user=self.other_user,
+            hidden=False,
+            sold=False,
+            dateListed=timezone.now()
+        )
+        listing.saved_by.add(self.user)
+        url = reverse("unsave-listing", kwargs={"listing_id": listing.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("listing.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_get_saved_listings(self, mock_verify):
+        """
+        User Story #11, 19, 20:
+        As a user, I would like to save listings
+
+        """
+        self.other_user = User.objects.create(
+            uid="other_uid",
+            email="other@example.com",
+            displayName="other",
+            bio="Dummy bio",
+            purdueEmail="fake@purdue.edu",
+            purdueEmailVerified=True
+        )
+
+        listing = Listing.objects.create(
+            title="Test Listing",
+            description="Test description",
+            price=10.0,
+            original_price=10.0,
+            category="Test",
+            user=self.other_user,
+            hidden=False,
+            sold=False,
+            dateListed=timezone.now()
+        )
+        listing.saved_by.add(self.user)
+        url = reverse("get-saved-listings")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]["title"], "Test Listing")

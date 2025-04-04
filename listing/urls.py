@@ -6,7 +6,7 @@ from listing.views import get_listing_by_lid, save_listing, unsave_listing, get_
 urlpatterns = [
     path('get/', get_all_listings, name="get_all_listings"),
     path('getUserListing/<str:uid>/', get_listings_by_user, name="get_listings_by_user"),
-    path('getListing/<str:lid>/', get_listing_by_lid, name=" get_listing_by_lid"),
+    path('getListing/<str:lid>/', get_listing_by_lid, name="get_listing_by_lid"),
     path('create/', create_listing, name="create_listing"),
     path('homepage/', get_top_listings, name='get_top_listings'),
     path('homepageVerified/', get_top_listings_verified, name='get_top_listings_verified'),
