@@ -10,7 +10,7 @@ from firebase_admin import auth as firebase_admin_auth
 
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from listing.models import Listing, ListingMedia
-from listing.serializers import CreateListingSerializer, ListingSerializer, SpecificListingSerializer, SpecificListingSerializer, DeleteListingSerializer, UpdateListingSerializer
+from listing.serializers import CreateListingSerializer, ListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
 
@@ -69,7 +69,7 @@ def get_top_listings(request):
     blocked_users = user.blockedUsers.all() if user else []
     print(blocked_users)
     listings = Listing.objects.exclude(user__in=blocked_users).order_by("-dateListed")[:12]
-    serializer = SpecificListingSerializer(listings, many=True)
+    serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
@@ -79,7 +79,7 @@ def get_top_listings_verified(request):
     user = User.objects.get(uid=request.user) if request.user.is_authenticated else None
     blocked_users = user.blockedUsers.all() if user else []
     listings = Listing.objects.exclude(user__in=blocked_users).order_by("-dateListed")[:12]
-    serializer = SpecificListingSerializer(listings, many=True)
+    serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
@@ -90,7 +90,7 @@ def get_listings_by_user(request, uid):
     Fetch all listings that a user owns
     """
     listings = Listing.objects.filter(user=uid)
-    serializer = SpecificListingSerializer(listings, many=True)
+    serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
@@ -114,7 +114,7 @@ def get_listing_by_lid(request, lid=None):
     # if listing_user in request_user.blocked_users.all():
     #     return Response({"error": "You have blocked this user"}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = SpecificListingSerializer(listing)
+    serializer = ListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -271,7 +271,7 @@ def get_saved_listings(request):
     blocked_users = user.blockedUsers.all() if user else []
 
     listings = Listing.objects.filter(saved_by=user).exclude(user__in=blocked_users)
-    serializer = SpecificListingSerializer(listings, many=True)
+    serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 # @api_view(["GET"])
