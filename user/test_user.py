@@ -4,6 +4,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from user.models import User
 from unittest.mock import patch
+from io import BytesIO
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 # Dummy token verifier for testing purposes.
 def dummy_verify_id_token(token):
@@ -247,3 +250,27 @@ class UserEndpointTests(APITestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["uid"], self.other_user.uid)
         self.assertEqual(data[0]["displayName"], self.other_user.displayName)
+
+    @patch("user.views.firebase_admin_auth.verify_id_token", side_effect=dummy_verify_id_token)
+    def test_upload_profile_picture_success(self, mock_verify):
+        """Test successful upload of a profile picture."""
+        url = reverse("upload_profile_picture")
+        
+        # Create a valid in-memory image file using Pillow.
+        image = Image.new("RGB", (100, 100), color=(255, 0, 0))
+        buf = BytesIO()
+        image.save(buf, format="PNG")
+        buf.seek(0)
+        dummy_file = SimpleUploadedFile("test.png", buf.read(), content_type="image/png")
+        
+        # Post the file using multipart/form-data.
+        response = self.client.post(url, data={"profilePicture": dummy_file}, format="multipart")
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data["message"], "Profile picture uploaded successfully")
+        self.assertIn("profilePicture", data)
+        
+        # Refresh the user instance to verify that the profile picture was saved.
+        self.user.refresh_from_db()
+        self.assertIsNotNone(self.user.profilePicture)
