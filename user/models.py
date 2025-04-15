@@ -1,11 +1,16 @@
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+from django.utils.timezone import now
 
 
 def user_profile_picture_path(instance, filename):
     # Save to: users/<uid>/profile_picture.<ext>
     ext = filename.split('.')[-1]
     return f'users/{instance.uid}/profile_picture.{ext}'
+
+
+def get_history(self):
+        return self.viewed_listings.all()[:5]
 
 
 class User(models.Model):
@@ -28,3 +33,13 @@ class User(models.Model):
         null=True,
         blank=True
     )
+
+
+class History(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='viewed_listings')
+    listing = models.ForeignKey('listing.Listing', on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(default=now)
+
+    class Meta:
+        ordering = ['-viewed_at']
+        unique_together = ('user', 'listing')

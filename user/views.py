@@ -9,6 +9,7 @@ from rest_framework import status
 
 from firebase_admin import auth as firebase_admin_auth
 
+from listing.serializers import ListingSerializer
 from message.models import Message, Room
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
@@ -286,3 +287,15 @@ def unblock_user(request, uid):
     user.blockedUsers.remove(blocked_user)
     user.save()
     return Response({"message": "User unblocked"}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def get_history(request):
+    user = User.objects.get(uid=request.user.username)
+    
+    viewed_listings = user.get_history()
+
+    serializer = ListingSerializer(viewed_listings, many=True)
+
+    return Response(serializer.data, status=200)
