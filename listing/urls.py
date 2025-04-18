@@ -1,5 +1,5 @@
 from django.urls import path
-from listing.views import get_all_listings, create_listing, get_top_listings, get_listings_by_user, delete_listing, update_listing
+from listing.views import get_all_listings, create_listing, get_top_listings, get_listings_by_user, delete_listing, increment_listing_view, update_listing
 from listing.views import get_listing_by_lid, save_listing, unsave_listing, get_saved_listings, get_top_listings_verified
 
 
@@ -14,5 +14,6 @@ urlpatterns = [
     path('update/<str:listing_id>/', update_listing, name='update_listing'),
     path('save/<int:listing_id>/', save_listing, name='save-listing'),
     path('unsave/<int:listing_id>/', unsave_listing, name='unsave-listing'),
-    path('getSaved/', get_saved_listings, name='get-saved-listings')
+    path('getSaved/', get_saved_listings, name='get-saved-listings'),
+    path("incrementView/<int:listing_id>/", increment_listing_view, name="increment_listing_view" ),
 ]

@@ -45,7 +45,7 @@ class ListingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'price', 'displayName',
             'original_price', 'category', 'hidden', 'views',
-            'saved_by', 'dateListed', 'sold', 'uid', 'profilePicture', 'media', 'location'
+            'saved_by', 'dateListed', 'sold', 'uid', 'profilePicture', 'media', 'location', 'views'
         ]
 
     def get_profilePicture(self, obj):
