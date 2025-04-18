@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
+from django.db.models import F
 
 from datetime import timedelta
 
@@ -25,7 +26,7 @@ def get_all_listings(request):
     sort = request.data.get("sort", "dateListed")
     direction = request.data.get("dir", "desc")
     category = request.data.get("categoryFilter", None)
-    date_range = request.data.get("dateFilter", None) # Current values: '', week, month
+    date_range = request.data.get("dateFilter", None)
     price_range = request.data.get("priceFilter", None)
     location = request.data.get("locationFilter", None)
     keyword = request.data.get("keyword", None)
@@ -273,6 +274,23 @@ def get_saved_listings(request):
     listings = Listing.objects.filter(saved_by=user).exclude(user__in=blocked_users)
     serializer = ListingSerializer(listings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def increment_listing_view(request, listing_id):
+    """
+    Increment the `views` field on the given listing and return the new count.
+    """
+    try:
+        # Use an F() expression to avoid race conditions
+        Listing.objects.filter(id=listing_id).update(views=F("views") + 1)
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({"views": listing.views}, status=status.HTTP_200_OK)
 
 # @api_view(["GET"])
 # @permission_classes([AllowAny]) 

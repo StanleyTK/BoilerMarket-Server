@@ -1,7 +1,7 @@
 import os
 import django
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, Sum
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -10,6 +10,7 @@ from rest_framework import status
 from firebase_admin import auth as firebase_admin_auth
 
 from listing.serializers import ListingSerializer
+from listing.models import Listing
 from message.models import Message, Room
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
@@ -19,6 +20,8 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from decouple import config
 import uuid
+
+
 
 SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 APP_URL = config("APP_URL")
@@ -134,13 +137,16 @@ def delete_user(request):
     user.delete()
     return Response({"message": "User deleted"}, status=status.HTTP_200_OK)
 
+
+
 @api_view(["GET"])
-@permission_classes([AllowAny]) 
+@permission_classes([AllowAny])
 def get_user_info(request, uid=None):
     """
     Fetch a user's profile by UID.
     - If no UID is provided, return the authenticated user's profile.
     - If a UID is provided, return that user's profile.
+    This also returns the total views across all of that user's listings.
     """
     if uid is None and request.user.is_authenticated:
         user = request.user
@@ -148,10 +154,24 @@ def get_user_info(request, uid=None):
         try:
             user = User.objects.get(uid=uid)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
+    # serialize the user
     serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # sum up all the views on this user's listings
+    agg = Listing.objects.filter(user=user).aggregate(views=Sum("views"))
+    total = agg.get("views") or 0
+    # print(total)
+
+    # merge serializer data with the new field
+    response_data = serializer.data
+    response_data["views"] = total
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(["PUT", "PATCH"])
 @authentication_classes([FirebaseAuthentication])
