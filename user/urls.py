@@ -10,7 +10,8 @@ from user.views import (unblock_user,
     update_user_info, 
     verify_purdue_email, 
     upload_profile_picture,
-    get_history
+    get_history,
+    addToHistory
 )
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path('blockUser/<str:uid>/', block_user, name="block_user"),
     path('unblockUser/<str:uid>/', unblock_user, name="unblock_user"),
     path('getBlockedUsers/', get_blocked_users, name="get_blocked_users"),
-    path('getHistory/<str:uid>/', get_history, name="get_history")
+    path('getHistory/<str:uid>/', get_history, name="get_history"),
+    path('addToHistory/', addToHistory, name="get_history")
 ]
