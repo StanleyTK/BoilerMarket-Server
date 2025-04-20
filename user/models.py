@@ -9,9 +9,6 @@ def user_profile_picture_path(instance, filename):
     return f'users/{instance.uid}/profile_picture.{ext}'
 
 
-def get_history(self):
-        return self.viewed_listings.all()[:5]
-
 
 class User(models.Model):
     uid = models.CharField(max_length=255, primary_key=True)
@@ -33,6 +30,9 @@ class User(models.Model):
         null=True,
         blank=True
     )
+
+    def get_history(self):
+        return self.viewed_listings.all()[:5]
 
 
 class History(models.Model):

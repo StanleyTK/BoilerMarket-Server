@@ -312,12 +312,14 @@ def unblock_user(request, uid):
 @api_view(["GET"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
-def get_history(request):
+def get_history(request, uid):
     user = User.objects.get(uid=request.user.username)
     
     viewed_listings = user.get_history()
 
-    serializer = ListingSerializer(viewed_listings, many=True)
+    listings = [entry.listing for entry in viewed_listings]
+
+    serializer = ListingSerializer(listings, many=True)
 
     return Response(serializer.data, status=200)
 
