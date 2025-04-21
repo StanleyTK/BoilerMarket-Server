@@ -1,5 +1,18 @@
 from django.urls import path
-from user.views import unblock_user, get_blocked_users, block_user, check_email_auth, create_user, delete_user, get_user_info, send_purdue_verification, update_user_info, verify_purdue_email, upload_profile_picture
+from user.views import (unblock_user, 
+    get_blocked_users,
+    block_user, 
+    check_email_auth, 
+    create_user, 
+    delete_user, 
+    get_user_info, 
+    send_purdue_verification, 
+    update_user_info, 
+    verify_purdue_email, 
+    upload_profile_picture,
+    get_history,
+    addToHistory
+)
 
 urlpatterns = [
     path('create_user/', create_user, name="create_user"),
@@ -13,5 +26,7 @@ urlpatterns = [
     path('upload_profile_picture/', upload_profile_picture, name="upload_profile_picture"),
     path('blockUser/<str:uid>/', block_user, name="block_user"),
     path('unblockUser/<str:uid>/', unblock_user, name="unblock_user"),
-    path('getBlockedUsers/', get_blocked_users, name="get_blocked_users")
+    path('getBlockedUsers/', get_blocked_users, name="get_blocked_users"),
+    path('getHistory/<str:uid>/', get_history, name="get_history"),
+    path('addToHistory/', addToHistory, name="get_history")
 ]

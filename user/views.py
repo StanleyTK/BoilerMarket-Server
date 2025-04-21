@@ -9,8 +9,10 @@ from rest_framework import status
 
 from firebase_admin import auth as firebase_admin_auth
 
+from listing.serializers import ListingSerializer
 from listing.models import Listing
 from message.models import Message, Room
+from user.models import History
 from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
@@ -306,3 +308,52 @@ def unblock_user(request, uid):
     user.blockedUsers.remove(blocked_user)
     user.save()
     return Response({"message": "User unblocked"}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def get_history(request, uid):
+    user = User.objects.get(uid=request.user.username)
+    
+    viewed_listings = user.get_history()
+
+    listings = [entry.listing for entry in viewed_listings]
+
+    serializer = ListingSerializer(listings, many=True)
+
+    return Response(serializer.data, status=200)
+
+@api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def addToHistory(request):
+    print("addToHistory function is running")
+    
+    user_id = request.data.get("userId")
+    listing_id = request.data.get("lid")
+
+    if not user_id or not listing_id:
+        return Response({"error": "userId and listingId are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(uid=user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    History.objects.update_or_create(
+        user=user,
+        listing=listing,
+        defaults={"viewed_at": django.utils.timezone.now()}
+    )
+
+# Way to delete old history if we care
+#    history_entries = History.objects.filter(user=user).order_by('-viewed_at')
+#    if history_entries.count() > 5:
+#        history_entries[5:].delete()
+
+    return Response({"message": "Listing added to history"}, status=status.HTTP_200_OK)
