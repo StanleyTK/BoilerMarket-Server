@@ -11,7 +11,8 @@ from user.views import (unblock_user,
     verify_purdue_email, 
     upload_profile_picture,
     get_history,
-    addToHistory
+    addToHistory,
+    getRecommendedListings
 )
 
 urlpatterns = [
@@ -28,5 +29,6 @@ urlpatterns = [
     path('unblockUser/<str:uid>/', unblock_user, name="unblock_user"),
     path('getBlockedUsers/', get_blocked_users, name="get_blocked_users"),
     path('getHistory/<str:uid>/', get_history, name="get_history"),
-    path('addToHistory/', addToHistory, name="get_history")
+    path('addToHistory/', addToHistory, name="get_history"),
+    path('getRec/<str:uid>/', getRecommendedListings, name="get_recommended_listings")
 ]

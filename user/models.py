@@ -32,7 +32,7 @@ class User(models.Model):
     )
 
     def get_history(self):
-        return self.viewed_listings.all()[:5]
+        return self.viewed_listings.all()[:6]
 
 
 class History(models.Model):
