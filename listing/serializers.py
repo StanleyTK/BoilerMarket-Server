@@ -57,17 +57,3 @@ class ListingSerializer(serializers.ModelSerializer):
     def get_media(self, obj):
         return [media.file.url for media in obj.media.all()]
 
-# class ListingSerializer(serializers.ModelSerializer):
-#     media = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Listing
-#         fields = [
-#             "id", "title", "description", "price", "original_price",
-#             "category", "user", "hidden", "views", "saved_by",
-#             "dateListed", "sold", "media", "location"
-#         ]
-#         read_only_fields = ["id", "original_price", "user", "dateListed"]
-
-#     def get_media(self, obj):
-#         return [media.file.url for media in obj.media.all()]

@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'channels',
     'listing',
     'message',
+    'report',
     'storages',
 
 ]
