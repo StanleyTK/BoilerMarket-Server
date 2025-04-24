@@ -1,6 +1,17 @@
 from django.urls import path
-from listing.views import get_all_listings, create_listing, get_top_listings, get_listings_by_user, delete_listing, increment_listing_view, update_listing
-from listing.views import get_listing_by_lid, save_listing, unsave_listing, get_saved_listings, get_top_listings_verified
+from listing.views import (get_all_listings, 
+    create_listing, 
+    get_top_listings, 
+    get_listings_by_user, 
+    delete_listing, 
+    increment_listing_view, 
+    update_listing,
+    get_listing_by_lid,
+    save_listing,
+    unsave_listing,
+    get_saved_listings,
+    get_top_listings_verified
+)
 
 
 urlpatterns = [

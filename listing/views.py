@@ -105,15 +105,6 @@ def get_listing_by_lid(request, lid=None):
         listing = Listing.objects.get(id=lid)
     except Listing.DoesNotExist:
         return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
-    # request_user = User.objects.get(uid=request.user)
-    # listing_user = listing.user
-    # print(f"Request user: {request_user.displayName}, Listing user: {listing_user.displayName}")
-    # print(f"Request user blocked users: {[user.displayName for user in request_user.blocked_users.all()]}")
-    # print(f"Listing user blocked users: {[user.displayName for user in listing_user.blocked_users.all()]}")
-    # if request_user in listing_user.blocked_users.all():
-    #     return Response({"error": "You are blocked by this user"}, status=status.HTTP_403_FORBIDDEN)
-    # if listing_user in request_user.blocked_users.all():
-    #     return Response({"error": "You have blocked this user"}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = ListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)
