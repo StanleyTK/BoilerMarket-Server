@@ -75,7 +75,7 @@ def create_report(request):
             listing=listing
         )
     except IntegrityError:
-        return Response({"error": "User has already reported this user."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": f"{user.displayName} has already reported {reported_user.displayName}."}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"message": "Report created"}, status=status.HTTP_201_CREATED)
 
