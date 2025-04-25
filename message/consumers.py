@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
 
 from message.models import Message, Room
 from user.models import User
@@ -11,6 +12,7 @@ ACTIVE_USERS = {}
 class GlobalNotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """User connects to receive notifications from all chat rooms."""
+
         self.user = self.scope["user"]
         if self.user.is_anonymous:
             await self.close()
@@ -25,14 +27,31 @@ class GlobalNotificationConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.user_group_name, self.channel_name)
         await self.accept()
 
+        await self.increment_connected_users()
+
     async def disconnect(self, close_code):
         """User disconnects from notification WebSocket."""
+
         await self.channel_layer.group_discard(self.user_group_name, self.channel_name)
+        await self.decrement_connected_users()
 
     async def send_notification(self, event):
         """Send notification event to the client."""
         print(f"Sending notification to {self.user.username}: {event}")
         await self.send(text_data=json.dumps({"sender": event["sender"], "message": event["message"], "room": event["room"]}))
+
+    async def increment_connected_users(self):
+        """Increment the connected users count in Redis."""
+        connected_users = cache.get("connected_users", 0)
+        print(f"Connected users before increment: {connected_users}")
+        cache.set("connected_users", connected_users + 1, timeout=None)
+
+    async def decrement_connected_users(self):
+        """Decrement the connected users count in Redis."""
+        connected_users = cache.get("connected_users", 0)
+        print(f"Connected users before decrement: {connected_users}")
+        if connected_users > 0:
+            cache.set("connected_users", connected_users - 1, timeout=None)
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
