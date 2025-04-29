@@ -5,6 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import User
 from user.models import User as BoilerMarketUser
 
+
 class FirebaseEmailVerifiedAuthentication(BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.headers.get("Authorization")
@@ -32,6 +33,17 @@ class FirebaseEmailVerifiedAuthentication(BaseAuthentication):
         
         user, created = User.objects.get_or_create(username=uid)
         return (user, None)
+    
+class AdminFirebaseAuthentication(FirebaseEmailVerifiedAuthentication):
+    def authenticate(self, request):
+        result = super().authenticate(request)
+        if result is None:
+            return None
+        user, _ = result
+        boiler_market_user = BoilerMarketUser.objects.get(uid=user.username)
+        if not boiler_market_user.admin:
+            raise AuthenticationFailed("User is not an admin")
+        return result
 
 class FirebaseAuthentication(BaseAuthentication):
     def authenticate(self, request):

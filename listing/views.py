@@ -9,11 +9,44 @@ from datetime import timedelta
 
 from firebase_admin import auth as firebase_admin_auth
 
-from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
+from server.authentication import AdminFirebaseAuthentication, FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from listing.models import Listing, ListingMedia
 from listing.serializers import CreateListingSerializer, ListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_hidden_listings(request):
+    """
+    Returns the number of hidden listings.
+    """
+    hidden_listings = Listing.objects.filter(hidden=True, sold=False).count()
+    print("Hidden listings:", hidden_listings)
+    return Response({"hidden_listings": hidden_listings}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_sold_listings(request):
+    """
+    Returns the number of sold listings.
+    """
+    sold_listings = Listing.objects.filter(sold=True).count()
+    print("Sold listings:", sold_listings)
+    return Response({"sold_listings": sold_listings}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_active_listings(request):
+    """
+    Returns the number of active listings.
+    """
+    active_listings = Listing.objects.filter(sold=False, hidden=False).count()
+    print("Active listings:", active_listings)
+    return Response({"active_listings": active_listings}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
@@ -105,15 +138,6 @@ def get_listing_by_lid(request, lid=None):
         listing = Listing.objects.get(id=lid)
     except Listing.DoesNotExist:
         return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
-    # request_user = User.objects.get(uid=request.user)
-    # listing_user = listing.user
-    # print(f"Request user: {request_user.displayName}, Listing user: {listing_user.displayName}")
-    # print(f"Request user blocked users: {[user.displayName for user in request_user.blocked_users.all()]}")
-    # print(f"Listing user blocked users: {[user.displayName for user in listing_user.blocked_users.all()]}")
-    # if request_user in listing_user.blocked_users.all():
-    #     return Response({"error": "You are blocked by this user"}, status=status.HTTP_403_FORBIDDEN)
-    # if listing_user in request_user.blocked_users.all():
-    #     return Response({"error": "You have blocked this user"}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = ListingSerializer(listing)
     return Response(serializer.data, status=status.HTTP_200_OK)

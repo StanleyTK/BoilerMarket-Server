@@ -1,10 +1,11 @@
 from django.urls import path
-from user.views import (unblock_user, 
+from user.views import (is_admin, unblock_user, 
     get_blocked_users,
     block_user, 
     check_email_auth, 
     create_user, 
     delete_user, 
+    get_connected_users,
     get_user_info, 
     send_purdue_verification, 
     update_user_info, 
@@ -30,5 +31,7 @@ urlpatterns = [
     path('getBlockedUsers/', get_blocked_users, name="get_blocked_users"),
     path('getHistory/<str:uid>/', get_history, name="get_history"),
     path('addToHistory/', addToHistory, name="get_history"),
-    path('getRec/<str:uid>/', getRecommendedListings, name="get_recommended_listings")
+    path('getRec/<str:uid>/', getRecommendedListings, name="get_recommended_listings"),
+    path('getConnectedUsers/', get_connected_users, name="get_connected_users"),
+    path('isAdmin/', is_admin, name="is_admin"),
 ]
