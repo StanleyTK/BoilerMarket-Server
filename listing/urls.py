@@ -12,7 +12,8 @@ from listing.views import (get_all_listings,
     get_saved_listings,
     get_top_listings_verified,
     get_active_listings,
-    get_sold_listings
+    get_sold_listings,
+    get_hidden_listings
 )
 
 
@@ -31,4 +32,5 @@ urlpatterns = [
     path("incrementView/<int:listing_id>/", increment_listing_view, name="increment_listing_view" ),
     path("getActiveListings/", get_active_listings, name="get_active_listings" ),
     path("getSoldListings/", get_sold_listings, name="get_sold_listings" ),
+    path("getHiddenListings/", get_hidden_listings, name="get_hidden_listings" ),
 ]
