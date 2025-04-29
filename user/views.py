@@ -367,7 +367,7 @@ def getRecommendedListings(request, uid):
     
     viewed_listings = user.get_history()
     if not viewed_listings:
-        return Response({"error": "No history found for the user"}, status=status.HTTP_404_NOT_FOUND)
+        return Response([], status=status.HTTP_200_OK)
 
     category_counts = {}
     for entry in viewed_listings:
@@ -382,7 +382,11 @@ def getRecommendedListings(request, uid):
     viewed_listing_ids = [entry.listing.id for entry in viewed_listings]
     recommended_listings = Listing.objects.filter(
         category=most_common_category
-    ).exclude(id__in=viewed_listing_ids).order_by('-dateListed')[:6]
+    ).exclude(
+        id__in=viewed_listing_ids
+    ).exclude(
+        user=user
+    ).order_by('-dateListed')[:6]
 
     serializer = ListingSerializer(recommended_listings, many=True)
 
