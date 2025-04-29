@@ -379,3 +379,37 @@ def addToHistory(request):
 #        history_entries[5:].delete()
 
     return Response({"message": "Listing added to history"}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def getRecommendedListings(request, uid):
+    user = User.objects.get(uid=request.user.username)
+    
+    viewed_listings = user.get_history()
+    if not viewed_listings:
+        return Response([], status=status.HTTP_200_OK)
+
+    category_counts = {}
+    for entry in viewed_listings:
+        category = entry.listing.category
+        if category in category_counts:
+            category_counts[category] += 1
+        else:
+            category_counts[category] = 1
+
+    most_common_category = max(category_counts, key=category_counts.get)
+
+    viewed_listing_ids = [entry.listing.id for entry in viewed_listings]
+    recommended_listings = Listing.objects.filter(
+        category=most_common_category
+    ).exclude(
+        id__in=viewed_listing_ids
+    ).exclude(
+        user=user
+    ).order_by('-dateListed')[:6]
+
+    serializer = ListingSerializer(recommended_listings, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
