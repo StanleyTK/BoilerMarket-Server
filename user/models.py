@@ -22,6 +22,7 @@ class User(models.Model):
     bio = models.TextField(null=True, blank=True)
     admin = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
+    appeal = models.TextField(null=True, blank=True)
     blockedUsers = models.ManyToManyField('self', symmetrical=False, related_name='blocked_by', blank=True)
 
     profilePicture = models.ImageField(
