@@ -9,11 +9,22 @@ from datetime import timedelta
 
 from firebase_admin import auth as firebase_admin_auth
 
-from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
+from server.authentication import AdminFirebaseAuthentication, FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from listing.models import Listing, ListingMedia
 from listing.serializers import CreateListingSerializer, ListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_active_listings(request):
+    """
+    Returns the number of active listings.
+    """
+    active_listings = Listing.objects.filter(sold=False, hidden=False).count()
+    print("Active listings:", active_listings)
+    return Response({"active_listings": active_listings}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])

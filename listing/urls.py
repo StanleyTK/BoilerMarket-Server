@@ -10,7 +10,8 @@ from listing.views import (get_all_listings,
     save_listing,
     unsave_listing,
     get_saved_listings,
-    get_top_listings_verified
+    get_top_listings_verified,
+    get_active_listings
 )
 
 
@@ -27,4 +28,5 @@ urlpatterns = [
     path('unsave/<int:listing_id>/', unsave_listing, name='unsave-listing'),
     path('getSaved/', get_saved_listings, name='get-saved-listings'),
     path("incrementView/<int:listing_id>/", increment_listing_view, name="increment_listing_view" ),
+    path("getActiveListings/", get_active_listings, name="get_active_listings" ),
 ]
