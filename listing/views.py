@@ -18,6 +18,17 @@ from user.models import User
 @api_view(["GET"])
 @authentication_classes([AdminFirebaseAuthentication])
 @permission_classes([IsAuthenticated])
+def get_sold_listings(request):
+    """
+    Returns the number of sold listings.
+    """
+    sold_listings = Listing.objects.filter(sold=True).count()
+    print("Sold listings:", sold_listings)
+    return Response({"sold_listings": sold_listings}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
 def get_active_listings(request):
     """
     Returns the number of active listings.
