@@ -9,11 +9,44 @@ from datetime import timedelta
 
 from firebase_admin import auth as firebase_admin_auth
 
-from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
+from server.authentication import AdminFirebaseAuthentication, FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from listing.models import Listing, ListingMedia
 from listing.serializers import CreateListingSerializer, ListingSerializer, DeleteListingSerializer, UpdateListingSerializer
 from user.models import User
 
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_hidden_listings(request):
+    """
+    Returns the number of hidden listings.
+    """
+    hidden_listings = Listing.objects.filter(hidden=True, sold=False).count()
+    print("Hidden listings:", hidden_listings)
+    return Response({"hidden_listings": hidden_listings}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_sold_listings(request):
+    """
+    Returns the number of sold listings.
+    """
+    sold_listings = Listing.objects.filter(sold=True).count()
+    print("Sold listings:", sold_listings)
+    return Response({"sold_listings": sold_listings}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_active_listings(request):
+    """
+    Returns the number of active listings.
+    """
+    active_listings = Listing.objects.filter(sold=False, hidden=False).count()
+    print("Active listings:", active_listings)
+    return Response({"active_listings": active_listings}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])

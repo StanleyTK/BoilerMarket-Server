@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
+from django.core.cache import cache
 
 from firebase_admin import auth as firebase_admin_auth
 
@@ -13,7 +14,7 @@ from listing.serializers import ListingSerializer
 from listing.models import Listing
 from message.models import Message, Room
 from user.models import History
-from server.authentication import FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
+from server.authentication import AdminFirebaseAuthentication, FirebaseAuthentication, FirebaseEmailVerifiedAuthentication
 from server.firebase_auth import firebase_required
 from user.models import User
 from user.serializers import AddPurdueVerificationTokenSerializer, CreateUserSerializer, DeleteUserSerializer, EditUserSerializer, UploadProfilePictureSerializer, UserSerializer, VerifyPurdueEmailSerializer
@@ -26,6 +27,27 @@ import uuid
 
 SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 APP_URL = config("APP_URL")
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def is_admin(request):
+    """
+    Returns whether the user is an admin.
+    """
+
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def get_connected_users(request):
+    """
+    Returns the number of connected users.
+    """
+    connected_users = cache.get("connected_users", 0)
+    print("Connected users:", connected_users)
+    return Response({"connected_users": connected_users}, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
