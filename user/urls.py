@@ -13,7 +13,10 @@ from user.views import (is_admin, unblock_user,
     upload_profile_picture,
     get_history,
     addToHistory,
-    getRecommendedListings
+    getRecommendedListings,
+    addAppeal,
+    getAppeals,
+    getBannedAndAppealStatus
 )
 
 urlpatterns = [
@@ -34,4 +37,7 @@ urlpatterns = [
     path('getRec/<str:uid>/', getRecommendedListings, name="get_recommended_listings"),
     path('getConnectedUsers/', get_connected_users, name="get_connected_users"),
     path('isAdmin/', is_admin, name="is_admin"),
+    path('addAppeal/', addAppeal, name="add_appeal"),
+    path('getAppeals/', getAppeals, name="get_appeals"),
+    path('getBAndAStatus/', getBannedAndAppealStatus, name="get_banned_and_appeal_status"),
 ]

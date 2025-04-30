@@ -413,3 +413,51 @@ def getRecommendedListings(request, uid):
     serializer = ListingSerializer(recommended_listings, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
+def addAppeal(request):
+    uid = request.data.get("userId")
+    if not uid:
+        return Response({"error": "UID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = User.objects.get(uid=request.user.username)
+    appeal = request.data.get("appeal")
+    if not appeal:
+        return Response({"error": "Appeal is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not user.banned:
+        return Response({"error": "User is not banned"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if user.appeal:
+        return Response({"error": "User already has an appeal"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user.appeal = appeal
+    user.save()
+    return Response({"message": "Appeal added"}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def getAppeals(request):
+    users = User.objects.filter(appeal__isnull=False).exclude(appeal="")
+    appeals = [{"uid": user.uid, "appeal": user.appeal} for user in users]
+    return Response(appeals, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def getBannedAndAppealStatus(request, uid):
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    banned = user.banned
+    appeal = True if banned else False
+
+    return Response({"banned": banned, "appeal": appeal}, status=status.HTTP_200_OK)
