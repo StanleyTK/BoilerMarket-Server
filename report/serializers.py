@@ -14,11 +14,15 @@ class ReportSerializer(serializers.ModelSerializer):
     reported_uid = serializers.ReadOnlyField(source='reported_user.uid')
     uid = serializers.ReadOnlyField(source='user.uid')
     listing_id = serializers.ReadOnlyField(source='listing.id')
+    reported_displayName = serializers.ReadOnlyField(source='reported_user.displayName')
+    user_displayName = serializers.ReadOnlyField(source='user.displayName')
+
+
     
     class Meta:
         model = Report
         fields = [
             'id', 'reported_uid', 'uid', 'listing_id',
-            'title', 'description', 'dateReported'
+            'title', 'description', 'dateReported', 'reported_displayName', 'user_displayName'
         ]
 
