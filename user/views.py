@@ -449,7 +449,7 @@ def getAppeals(request):
 
 
 @api_view(["GET"])
-@authentication_classes([AdminFirebaseAuthentication])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
 @permission_classes([IsAuthenticated])
 def getBannedAndAppealStatus(request, uid):
     try:
@@ -458,6 +458,6 @@ def getBannedAndAppealStatus(request, uid):
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
     banned = user.banned
-    appeal = True if banned else False
+    appeal = True if user.appeal else False
 
     return Response({"banned": banned, "appeal": appeal}, status=status.HTTP_200_OK)

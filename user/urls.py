@@ -39,5 +39,5 @@ urlpatterns = [
     path('isAdmin/', is_admin, name="is_admin"),
     path('addAppeal/', addAppeal, name="add_appeal"),
     path('getAppeals/', getAppeals, name="get_appeals"),
-    path('getBAndAStatus/', getBannedAndAppealStatus, name="get_banned_and_appeal_status"),
+    path('getBAndAStatus/<str:uid>/', getBannedAndAppealStatus, name="get_banned_and_appeal_status"),
 ]
