@@ -461,3 +461,25 @@ def getBannedAndAppealStatus(request, uid):
     appeal = True if user.appeal else False
 
     return Response({"banned": banned, "appeal": appeal}, status=status.HTTP_200_OK)
+
+
+# These functions are for testing
+@api_view(["POST"])
+def DirectBanAndAppealSwap(request):
+    uid = request.data.get("userId")
+    ban = request.data.get("ban")
+    appeal = request.data.get("appeal")
+    if not uid:
+        return Response({"error": "UID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if ban:
+        user.banned = not user.banned
+    if appeal:
+        user.appeal = "Test appeal" if not user.appeal else ""
+    user.save()
+    return Response({"message": f"Banned: {user.banned}, Appeal: {user.appeal}"}, status=status.HTTP_200_OK)
