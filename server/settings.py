@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'listing',
     'message',
     'report',
+    'review',
     'storages',
 
 ]
