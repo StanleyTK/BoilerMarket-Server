@@ -463,6 +463,23 @@ def getBannedAndAppealStatus(request, uid):
     return Response({"banned": banned, "appeal": appeal}, status=status.HTTP_200_OK)
 
 
+
+@api_view(["POST"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
+def getBannedUsersAndAppeals(request):
+    users = User.objects.filter(banned=True)
+    appeals = [
+        {
+            "uid": user.uid,
+            "username": user.displayName,
+            "appeal": user.appeal if user.appeal else ""
+        } 
+        for user in users
+    ]
+    return Response(appeals, status=status.HTTP_200_OK)
+
+
 # These functions are for testing
 @api_view(["POST"])
 @authentication_classes([FirebaseEmailVerifiedAuthentication])
