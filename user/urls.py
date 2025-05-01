@@ -18,7 +18,8 @@ from user.views import (is_admin, unblock_user,
     getAppeals,
     getBannedAndAppealStatus,
     DirectBanAndAppealSwap,
-    unban_user
+    unban_user,
+    resolveAppeal
 )
 
 urlpatterns = [
@@ -43,5 +44,6 @@ urlpatterns = [
     path('getAppeals/', getAppeals, name="get_appeals"),
     path('getBAndAStatus/<str:uid>/', getBannedAndAppealStatus, name="get_banned_and_appeal_status"),
     path('DirectBanAndAppealSwap/', DirectBanAndAppealSwap, name="direct_ban_and_appeal_swap"),
-    path('unban_user/', unban_user, name="unban_user")
+    path('unban_user/', unban_user, name="unban_user"),
+    path('resolveAppeal/', resolveAppeal, name="resolve_appeal")
 ]

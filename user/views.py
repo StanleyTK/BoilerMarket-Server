@@ -485,6 +485,23 @@ def unban_user(request):
 @api_view(["POST"])
 @authentication_classes([AdminFirebaseAuthentication])
 @permission_classes([IsAuthenticated])
+def resolveAppeal(request):
+    uid = request.data.get("userId")
+    if not uid:
+        return Response({"error": "UID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(uid=uid)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    user.appeal = None
+    user.save()
+    return Response({"message": f"User {user.displayName} appeal resolved"}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([AdminFirebaseAuthentication])
+@permission_classes([IsAuthenticated])
 def getBannedUsersAndAppeals(request):
     users = User.objects.filter(banned=True)
     appeals = [
