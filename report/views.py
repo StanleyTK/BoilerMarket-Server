@@ -87,14 +87,15 @@ def delete_report(request, report_id):
     report.delete()
     return Response({"message": "Report deleted successfully."}, status=status.HTTP_200_OK)
 
+
 @api_view(["POST"])
 @authentication_classes([FirebaseAuthentication])
 @permission_classes([IsAuthenticated])
 def ban_user(request, uid):
     """
     Ban a user by setting their 'banned' flag to True. Admin-only.
+    Also deletes all reports against the user.
     """
-    # fetch requester as User model, check admin flag
     try:
         requester = User.objects.get(uid=request.user.username)
     except User.DoesNotExist:
@@ -110,7 +111,15 @@ def ban_user(request, uid):
 
     user_to_ban.banned = True
     user_to_ban.save()
+
+    # Corrected line
+    deleted_count, _ = Report.objects.filter(reported_user=user_to_ban).delete()
+
     return Response(
-        {"message": f"User '{user_to_ban.displayName}' has been banned."},
+        {
+            "message": f"User '{user_to_ban.displayName}' has been banned.",
+            "reports_deleted": deleted_count
+        },
         status=status.HTTP_200_OK
     )
+
