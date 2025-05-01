@@ -465,6 +465,8 @@ def getBannedAndAppealStatus(request, uid):
 
 # These functions are for testing
 @api_view(["POST"])
+@authentication_classes([FirebaseEmailVerifiedAuthentication])
+@permission_classes([IsAuthenticated])
 def DirectBanAndAppealSwap(request):
     uid = request.data.get("userId")
     ban = request.data.get("ban")
